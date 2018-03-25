@@ -20,6 +20,14 @@ DETAIL3 = DETAIL2 + LINE_PAD
 FLUSH = ' '
 
 
+roa_labels = {
+    'Clan': 'Member of',
+    'isClogger': 'Combat Logger',
+    'isKOS': 'on KOS',
+    'KOSdesc': 'KOS reason'
+}
+
+
 def _bool_to_str(boolVal):
     return 'YES' if boolVal else 'NO'
 
@@ -28,6 +36,7 @@ class OverlayManager:
     _this_dir = os.path.abspath(os.path.dirname(__file__))
     _overlay_dir = os.path.join(_this_dir, "EDMCOverlay")
     _overlay = None
+    _line_template = u'{}: {}'
     _ttl = 8
 
     def __init__(self):
@@ -58,23 +67,21 @@ class OverlayManager:
         except Exception as e:
             print('Exception sending message to overlay '.format(e))
 
-    def flush_line(self, row, co1):
-        self.display(FLUSH, DETAIL + (row * LINE_PAD), co1)
-
     def flush(self):
-        self.display_cmdr_name(FLUSH)
+        # unnecessary (maybe)
+        #self.display_cmdr_name(FLUSH)
 
+        self.display(FLUSH, DETAIL1, COL1)
+        self.display(FLUSH, DETAIL1, COL2)
+
+        # unnecessary (maybe)
+        """
         self.display_sect_title(FLUSH, COL1)
         self.display_sect_title(FLUSH, COL2)
-
+        
         self.warning(FLUSH, COL1)
         self.warning(FLUSH, COL2)
-
-        for i in range(12):
-            self.flush_line(i, COL1)
-
-        for i in range(4):
-            self.flush_line(i, COL2)
+        """
 
     def notify(self, text):
         self.display(text, row=HEADER, color="#00ff00", col=COL1, size="large")
@@ -99,11 +106,6 @@ class OverlayManager:
                      col=col,
                      size="large")
 
-    def display_line_at(self, label, value, i, col):
-        self.display(u'{}: {}'.format(label, value),
-                     row=DETAIL + (i * LINE_PAD),
-                     col=col)
-
     def display_info(self, reply):
         cmdr_data = parse_inara_reply(reply['inara'])
         roa_data = reply['roa']
@@ -111,31 +113,28 @@ class OverlayManager:
         self.display_inara_info(cmdr_data)
         self.display_roa_info(roa_data)
 
+
     def display_inara_info(self, cmdrData):
         self.display_sect_title("Inara", COL1)
 
         if cmdrData:
             base = cmdrData['base']
 
-            if 'Role' in base:
-                self.display_line_at('Role', base['Role'], 1, COL1)
+            data = []
 
-            if 'Allegiance' in base:
-                self.display_line_at('Allegiance', base['Allegiance'], 2, COL1)
-
-            if 'Power' in base:
-                self.display_line_at('Power', base['Power'], 3, COL1)
-
-            rank_line = 4
+            for key in base:
+                data.append(self._line_template.format(key, base[key]))
 
             for i, (label, value) in enumerate(cmdrData['rank'].items()):
-                self.display_line_at(label, value, rank_line + i, COL1)
+                data.append(self._line_template.format(label, value))
 
             if 'wing' in cmdrData:
-                wing_line = 10
-
                 for i, (label, value) in enumerate(cmdrData['wing'].items()):
-                    self.display_line_at(label, value, wing_line + i, COL1)
+                    data.append(self._line_template.format(label, value))
+
+            text = '\n'.join(data)
+
+            self.display(text, row=DETAIL1, col=COL1)
         else:
             self.warning('No results', COL1)
 
@@ -145,13 +144,17 @@ class OverlayManager:
         cmdrData = data['cmdrData']
 
         if cmdrData:
-            self.display_line_at('Clan', cmdrData['Clan'], 1, COL2)
-            self.display_line_at('Combat logger', _bool_to_str(cmdrData['isClogger']), 2, COL2)
 
-            isKOS = cmdrData['isKOS']
-            self.display_line_at('KOS', _bool_to_str(isKOS), 3, COL2)
+            data = []
 
-            if isKOS:
-                self.display_line_at('KOS info', cmdrData['KOSdesc'], 4, COL2)
+            for key in cmdrData:
+                if key == 'onKOS' or key == 'isClogger':
+                    data.append(self._line_template.format(roa_labels[key], _bool_to_str(cmdrData[key])))
+                else:
+                    data.append(self._line_template.format(roa_labels[key], cmdrData[key]))
+
+            text = '\n'.join(data)
+
+            self.display(text, row=DETAIL1, col=COL2)
         else:
             self.warning('No results', COL2)
