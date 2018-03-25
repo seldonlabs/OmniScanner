@@ -6,6 +6,7 @@ import requests
 import Tkinter as tk
 import myNotebook as nb
 from config import config
+from monitor import monitor
 
 from util import is_mode, is_target_locked, is_target_unlocked, is_scanned, is_command
 from overlay import OverlayManager
@@ -115,7 +116,10 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
                     pilot_name_localised = entry['PilotName_Localised']
                     _overlay.notify('Getting info for {}'.format(pilot_name_localised))
 
-                    r = requests.post(INFO_SRV, data={'caller': cmdr, 'system': system, 'cmdr': search_name}, timeout=TIMEOUT)
+                    r = requests.post(INFO_SRV, data={'caller': cmdr,
+                                                      'mode': monitor.mode.lower(),
+                                                      'system': system,
+                                                      'cmdr': search_name}, timeout=TIMEOUT)
                     r.raise_for_status()
                     reply = r.json()
 
