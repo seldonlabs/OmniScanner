@@ -148,10 +148,11 @@ class OverlayManager:
             data = []
 
             for key in cmdrData:
-                if key == 'onKOS' or key == 'isClogger':
+                if key == 'isKOS' or key == 'isClogger':
                     data.append(self._line_template.format(roa_labels[key], _bool_to_str(cmdrData[key])))
                 else:
-                    data.append(self._line_template.format(roa_labels[key], cmdrData[key]))
+                    if cmdrData[key]:
+                        data.append(self._line_template.format(roa_labels[key], cmdrData[key]))
 
             text = '\n'.join(data)
 
