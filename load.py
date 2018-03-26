@@ -1,21 +1,20 @@
 """
 EDCmdrInfo by Seldonlabs
 """
-import requests
-
 import Tkinter as tk
 import myNotebook as nb
-from config import config
-from monitor import monitor
 
-from util import is_mode, is_target_locked, is_target_unlocked, is_scanned, is_command
+from config import config
+
+import util
+import net
+from cache import Cache
 from overlay import OverlayManager
 
 APP_LONGNAME = "EDCommanderInfo"
 APP_VERSION = "0.1.0"
-INFO_SRV = "http://cmdrinfo.seldonlabs.com/req"
-#INFO_SRV = "http://localhost:8000/req"
 
+_cache = None
 _overlay = None
 
 TTL_LABEL = "Overlay duration (in seconds)"
@@ -23,15 +22,14 @@ TTL_VALUE_DEFAULT = 6
 TTL_CONFIG_KEY = "EdCmdrInfoTimeToLive"
 TTL_FIELD = tk.StringVar(value=config.get(TTL_CONFIG_KEY))
 
-TIMEOUT = 10
-
 
 def plugin_start():
     """
     Load this plugin into EDMC
     """
+    global _cache
     global _overlay
-    global PREFVAL_TTL
+    _cache = Cache()
     _overlay = OverlayManager()
 
     if not TTL_FIELD.get():
@@ -84,6 +82,8 @@ def plugin_stop():
     """
     Close plugin
     """
+    global _cache
+    _cache.close()
     print("Closing {} version {}".format(APP_LONGNAME, APP_VERSION))
 
 
@@ -98,9 +98,11 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     :param state:
     :return:
     """
-    if not is_beta and is_mode():
-        if is_target_locked(entry):
-            if is_scanned(entry):
+
+    if not is_beta and util.is_mode():
+        if util.is_target_locked(entry):
+            if util.is_scanned(entry):
+                global _cache
                 global _overlay
 
                 coded_pilot_name = entry['PilotName'].split(':')
@@ -116,14 +118,19 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
                     pilot_name_localised = entry['PilotName_Localised']
                     _overlay.notify('Getting info for {}'.format(pilot_name_localised))
 
-                    r = requests.post(INFO_SRV, data={'caller': cmdr,
-                                                      'mode': monitor.mode.lower(),
-                                                      'system': system,
-                                                      'cmdr': search_name}, timeout=TIMEOUT)
-                    r.raise_for_status()
-                    reply = r.json()
+                    cache_data = _cache.check(search_name)
 
-                    _overlay.display_cmdr_name(pilot_name_localised)
-                    _overlay.display_info(reply)
-        elif is_target_unlocked(entry):
-            _overlay.flush()
+                    if cache_data:
+                        cmdr_data = cache_data
+                    else:
+                        cmdr_data = net.call_srv(cmdr, system, search_name)
+
+                    if not 'error' in cmdr_data:
+                        _cache.add_to_cache(search_name, cmdr_data)
+
+                        _overlay.display_cmdr_name(pilot_name_localised)
+                        _overlay.display_info(cmdr_data)
+                    else:
+                        _overlay.error(cmdr_data['error'])
+        #elif util.is_target_unlocked(entry):
+         #   _overlay.flush()

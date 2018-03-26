@@ -21,7 +21,7 @@ FLUSH = ' '
 
 
 roa_labels = {
-    'Clan': 'Member of',
+    'Clan': 'Clan',
     'isClogger': 'Combat Logger',
     'isKOS': 'on KOS',
     'KOSdesc': 'KOS reason'
@@ -89,6 +89,13 @@ class OverlayManager:
     def display_cmdr_name(self, text):
         self.display(text,
                      row=HEADER,
+                     col=COL1,
+                     size="large")
+
+    def error(self, text):
+        self.display(text,
+                     row=DETAIL1,
+                     color="red",
                      col=COL1,
                      size="large")
 

@@ -39,3 +39,4 @@ packages/
 venv
 
 EDMCOverlay
+cache.db
