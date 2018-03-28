@@ -9,7 +9,8 @@ from config import config
 import util
 import net
 from cache import Cache
-from overlay import OverlayManager
+from overlay import OverlayManager, TTL_CONFIG_KEY, TTL_VALUE_DEFAULT
+from roa import ED_DATE_KEY, ED_DATE_VALUE
 
 APP_LONGNAME = "EDCommanderInfo"
 APP_VERSION = "0.1.0"
@@ -18,9 +19,10 @@ _cache = None
 _overlay = None
 
 TTL_LABEL = "Overlay duration (in seconds)"
-TTL_VALUE_DEFAULT = 6
-TTL_CONFIG_KEY = "EdCmdrInfoTimeToLive"
 TTL_FIELD = tk.StringVar(value=config.get(TTL_CONFIG_KEY))
+
+ED_DATE_LABEL = "Use Elite time"
+ED_DATE_FIELD = tk.IntVar(value=config.get(ED_DATE_KEY))
 
 
 def plugin_start():
@@ -35,6 +37,10 @@ def plugin_start():
     if not TTL_FIELD.get():
         TTL_FIELD.set(str(TTL_VALUE_DEFAULT))
         config.set(TTL_CONFIG_KEY, str(TTL_VALUE_DEFAULT))
+
+    if not ED_DATE_FIELD.get():
+        ED_DATE_FIELD.set(ED_DATE_VALUE)
+        config.set(ED_DATE_KEY, ED_DATE_VALUE)
 
     print("{} {} loaded!".format(APP_LONGNAME, APP_VERSION))
 
@@ -61,9 +67,14 @@ def plugin_prefs(parent):
     nb.Label(frame, text=APP_LONGNAME).grid(padx=PADX, row=ROW0, sticky=tk.W)
 
     nb.Label(frame, text=TTL_LABEL) \
-        .grid(padx=PADX, pady=PADY, row=ROW3, sticky=tk.W)
+        .grid(padx=PADX, pady=PADY, row=ROW1, sticky=tk.W)
     nb.Entry(frame, textvariable=TTL_FIELD) \
-        .grid(padx=PADX, pady=PADY, row=ROW3, column=1, sticky=tk.EW)
+        .grid(padx=PADX, pady=PADY, row=ROW1, column=1, sticky=tk.EW)
+
+    nb.Label(frame, text=ED_DATE_LABEL) \
+        .grid(padx=PADX, pady=PADY, row=ROW2, sticky=tk.W)
+    nb.Checkbutton(frame, text='Use Elite time or normal UTC time', variable=ED_DATE_FIELD) \
+        .grid(padx=PADX, pady=PADY, row=ROW2, column=1, sticky=tk.W)
 
     return frame
 
@@ -73,9 +84,7 @@ def prefs_changed():
     Handle plugin preferences
     """
     config.set(TTL_CONFIG_KEY, TTL_FIELD.get())
-
-    global _overlay
-    _overlay.set_ttl(int(TTL_FIELD.get()))
+    config.set(ED_DATE_KEY, ED_DATE_FIELD.get())
 
 
 def plugin_stop():
