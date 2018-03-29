@@ -1,5 +1,5 @@
 """
-EDCmdrInfo by Seldonlabs
+OmniScanner by Seldonlabs
 """
 import Tkinter as tk
 import myNotebook as nb
@@ -12,7 +12,7 @@ from cache import Cache
 from overlay import OverlayManager, TTL_CONFIG_KEY, TTL_VALUE_DEFAULT
 from roa import ED_DATE_KEY, ED_DATE_VALUE
 
-APP_LONGNAME = "EDCommanderInfo"
+APP_LONGNAME = "OmniScanner"
 APP_VERSION = "0.1.0"
 
 _cache = None
@@ -93,7 +93,7 @@ def plugin_stop():
     """
     global _cache
     _cache.close()
-    print("Closing {} version {}".format(APP_LONGNAME, APP_VERSION))
+    print("Closing {}".format(APP_LONGNAME))
 
 
 def journal_entry(cmdr, is_beta, system, station, entry, state):
