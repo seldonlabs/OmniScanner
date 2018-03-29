@@ -122,10 +122,10 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
 
                     search_name = coded_pilot_name[1][6:-1]
 
-                    print('{}: looking for {}'.format(APP_LONGNAME, search_name))
+                    print(u'{}: looking for {}'.format(APP_LONGNAME, search_name))
 
                     pilot_name_localised = entry['PilotName_Localised']
-                    _overlay.notify('Getting info for {}'.format(pilot_name_localised))
+                    _overlay.notify(u'Getting info for {}'.format(pilot_name_localised))
 
                     cache_data = _cache.check(search_name)
 
