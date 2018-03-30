@@ -1,6 +1,7 @@
 """
 OmniScanner by Seldonlabs
 """
+import plug
 import Tkinter as tk
 import myNotebook as nb
 
@@ -17,6 +18,9 @@ APP_VERSION = "0.1.0"
 
 _cache = None
 _overlay = None
+
+_flag_status = 0
+_hardpoints_deployed = False
 
 TTL_LABEL = "Overlay duration (in seconds)"
 TTL_FIELD = tk.StringVar(value=config.get(TTL_CONFIG_KEY))
@@ -96,6 +100,34 @@ def plugin_stop():
     print("Closing {}".format(APP_LONGNAME))
 
 
+def dashboard_entry(cmdr, is_beta, entry):
+    """
+    Check for Status.json
+    :param cmdr:
+    :param is_beta:
+    :param entry:
+    :return:
+    """
+    global _overlay
+    global _flag_status
+
+    if not is_beta:
+        flags = entry['Flags']
+        _is_in_SC = flags & plug.FlagsSupercruise
+
+        if not _is_in_SC:
+            _hardpoints_deployed = flags & plug.FlagsHardpointsDeployed
+            if _hardpoints_deployed:
+                if _flag_status + 64 == flags:
+                    _overlay.service_message('{} deactivated'.format(APP_LONGNAME), "#ff0000")
+                _flag_status = flags
+            else:
+                if _flag_status - 64 == flags:
+                    _overlay.service_message('{} activated'.format(APP_LONGNAME), "#00ff00")
+                _flag_status = flags
+
+
+
 def journal_entry(cmdr, is_beta, system, station, entry, state):
     """
     hook for journal entry
@@ -108,7 +140,9 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     :return:
     """
 
-    if not is_beta and util.is_mode():
+    global _hardpoints_deployed
+
+    if not is_beta and util.is_mode() and not _hardpoints_deployed:
         if util.is_target_locked(entry):
             if util.is_scanned(entry):
                 global _cache

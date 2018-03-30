@@ -45,16 +45,22 @@ class OverlayManager:
 
         self._overlay = edmcoverlay.Overlay()
 
-    def display(self, text, row, col, color="yellow", size="normal"):
+    def _send_to_socket(self, text, row, col, color, ttl, size):
         try:
             self._overlay.send_message("edcmdrinfo_{}_{}".format(row, col),
                                        text,
                                        color,
                                        col, row,
-                                       ttl=config.get(TTL_CONFIG_KEY),
+                                       ttl=ttl,
                                        size=size)
         except Exception as e:
             print('Exception sending message to overlay '.format(e))
+
+    def display(self, text, row, col, color="yellow", size="normal"):
+        self._send_to_socket(text, row, col, color, config.get(TTL_CONFIG_KEY), size)
+
+    def service_message(self, text, color):
+        self._send_to_socket(text, HEADER, COL1, color, ttl=2, size="large")
 
     def flush(self):
         # unnecessary (maybe)
