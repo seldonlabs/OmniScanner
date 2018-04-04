@@ -109,6 +109,7 @@ def dashboard_entry(cmdr, is_beta, entry):
     :return:
     """
     global _overlay
+    global _hardpoints_deployed
     global _flag_status
 
     if not is_beta:
