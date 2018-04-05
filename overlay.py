@@ -13,15 +13,19 @@ TTL_CONFIG_KEY = "EdCmdrInfoTimeToLive"
 TTL_VALUE_DEFAULT = 8
 
 HEADER = 380
+SUB_HEADER = 400
 INFO = 420
 DETAIL = 420
+
 COL_PAD = 160
 COL1 = 95
 COL2 = COL1 + COL_PAD
+
 LINE_PAD = 25
 DETAIL1 = INFO + LINE_PAD
 DETAIL2 = DETAIL1 + LINE_PAD
 DETAIL3 = DETAIL2 + LINE_PAD
+
 FLUSH = ' '
 
 
@@ -66,6 +70,7 @@ class OverlayManager:
         # unnecessary (maybe)
         # self.display_cmdr_name(FLUSH)
 
+        self.display(FLUSH, SUB_HEADER, COL1)
         self.display(FLUSH, DETAIL1, COL1)
         self.display(FLUSH, DETAIL1, COL2)
 
@@ -108,6 +113,11 @@ class OverlayManager:
                      col=col,
                      size="large")
 
+    def display_role(self, text):
+        self.display(text,
+                     row=SUB_HEADER,
+                     col=COL1)
+
     def display_info(self, reply):
         cmdr_data = parse_inara_reply(reply['inara'])
         roa_data = parse_roa_reply(reply['roa'])
@@ -124,7 +134,12 @@ class OverlayManager:
             lines = []
 
             for key in base:
-                lines.append(self._line_template.format(key, base[key]))
+                # display role under cmdr name
+                # should fix overlapping for Role attribute
+                if key == 'Role':
+                    self.display_role(base[key])
+                else:
+                    lines.append(self._line_template.format(key, base[key]))
 
             for i, (label, value) in enumerate(cmdrData['rank'].items()):
                 lines.append(self._line_template.format(label, value))
