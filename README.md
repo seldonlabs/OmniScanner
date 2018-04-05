@@ -27,6 +27,18 @@ OmniScanner works only when another player is scanned (obviously), after the sca
 
 **Only open mode is supported**, this plugin deactivate itself in **solo** for obvious reasons and **private groups are not supported** (at least for now).
 
+## Features
+- Full [Inara][0] profile with public data.
+- [ROA][1] profile with KOS and combat logging commanders.
+- Customizable onscreen TTL (Time To Live) for the overlay.
+- Customizable date format with normal UTC and Elite UTC (330x years).
+- Automatic deactivation when deploying hardpoints.
+- Commander tracking for combat loggers (highly experimental, not public).
+
+### Upcoming features
+- Commands for OmniScanner cache.
+- Customizable Overlay.
+
 ## Commander Tracking
 
 As an **experimental feature**, if you scan a commander that is flagged by ROA DB as **Combat Logger** or is in ROA **KOS list**, the position of the scanned commander will be logged and saved until another commander will update that entry with another scan.
