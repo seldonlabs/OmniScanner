@@ -39,5 +39,5 @@ packages/
 .vscode
 venv
 
-EDMCOverlay
+# cache
 cache.db
