@@ -5,8 +5,6 @@ Inara API calls
 import json
 
 labels = {
-    'commanderName': 'Name',
-    'preferredGameRole': 'Role',
     'preferredAllegianceName': 'Allegiance',
     'preferredPowerName': 'Power',
 }
@@ -98,7 +96,7 @@ rank_values = {
 }
 
 
-def parse_inara_reply(data):
+def parse_reply(data):
     """
     Query the API
     :param reply:
@@ -111,18 +109,24 @@ def parse_inara_reply(data):
 
     if eventStatus != 204:
         eventData = events[0]['eventData']
+
         if 'otherNamesFound' in eventData:
             print('ugh multiple results on Inara')
         else:
-            cmdrData = {
-                'base': {
-                    labels[label]: eventData[label]
-                    for label in labels if label in eventData
-                },
-                'rank': {
-                    rank['rankName']: rank_values[rank['rankName']][rank['rankValue']]
-                    for rank in eventData['commanderRanksPilot']
-                }
+            cmdrData = {}
+
+            # give role a custom key
+            if 'preferredGameRole' in eventData:
+                cmdrData['role'] = eventData['preferredGameRole']
+
+            cmdrData['base'] = {
+                labels[label]: eventData[label]
+                for label in labels if label in eventData
+            }
+
+            cmdrData['rank'] = {
+                rank['rankName']: rank_values[rank['rankName']][rank['rankValue']]
+                for rank in eventData['commanderRanksPilot']
             }
 
             # Wing data is not always present

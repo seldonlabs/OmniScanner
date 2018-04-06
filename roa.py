@@ -11,9 +11,10 @@ roa_labels = {
     'Clan': 'Clan',
     'isClogger': 'Combat Logger',
     'isKOS': 'on KOS',
-    'KOSdesc': 'KOS reason',
+    'KOSdesc': 'Reason for KOS',
     'lastUPD': 'Last update'
 }
+
 
 rgx = 'Date\(([0-9]+)\+.*\)'
 
@@ -36,7 +37,7 @@ def _parse_epoch(date):
     return '{}-{}-{}'.format(year, month, day)
 
 
-def parse_roa_reply(reply):
+def parse_reply(reply):
     data = None
 
     cmdrData = reply['cmdrData']
@@ -51,6 +52,6 @@ def parse_roa_reply(reply):
                 data[roa_labels[key]] = _parse_epoch(cmdrData[key])
             else:
                 if cmdrData[key]:
-                    data[key] = cmdrData[key]
+                    data[roa_labels[key]] = cmdrData[key]
 
     return data
