@@ -25,7 +25,7 @@ _hardpoints_deployed = False
 TTL_LABEL = "Overlay duration (in seconds)"
 TTL_FIELD = tk.StringVar(value=config.get(TTL_CONFIG_KEY))
 
-ED_DATE_LABEL = "Use Elite time"
+ED_DATE_LABEL = "Elite time"
 ED_DATE_FIELD = tk.IntVar(value=config.get(ED_DATE_KEY))
 
 
@@ -77,7 +77,7 @@ def plugin_prefs(parent):
 
     nb.Label(frame, text=ED_DATE_LABEL) \
         .grid(padx=PADX, pady=PADY, row=ROW2, sticky=tk.W)
-    nb.Checkbutton(frame, text='Use Elite time or normal UTC time', variable=ED_DATE_FIELD) \
+    nb.Checkbutton(frame, text='If checked use Elite 330x date format', variable=ED_DATE_FIELD) \
         .grid(padx=PADX, pady=PADY, row=ROW2, column=1, sticky=tk.W)
 
     return frame
@@ -160,7 +160,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
                     print(u'{}: looking for {}'.format(APP_LONGNAME, search_name))
 
                     pilot_name_localised = entry['PilotName_Localised']
-                    _overlay.notify(u'Getting info for {}'.format(pilot_name_localised))
+                    _overlay.display_notification(u'Getting info for {}'.format(pilot_name_localised))
 
                     cache_data = _cache.check(search_name)
 
@@ -175,6 +175,6 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
                         _overlay.display_cmdr_name(pilot_name_localised)
                         _overlay.display_info(cmdr_data)
                     else:
-                        _overlay.error(cmdr_data['error'])
+                        _overlay.display_error(cmdr_data['error'])
         #elif util.is_target_unlocked(entry):
          #   _overlay.flush()

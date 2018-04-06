@@ -9,7 +9,7 @@ from config import config
 from inara import parse_inara_reply
 from roa import parse_roa_reply
 
-TTL_CONFIG_KEY = "EdCmdrInfoTimeToLive"
+TTL_CONFIG_KEY = "OmniScannerTTL"
 TTL_VALUE_DEFAULT = 8
 
 HEADER = 380
@@ -17,7 +17,7 @@ SUB_HEADER = 400
 INFO = 420
 DETAIL = 420
 
-COL_PAD = 160
+COL_PAD = 150
 COL1 = 95
 COL2 = COL1 + COL_PAD
 
@@ -27,6 +27,12 @@ DETAIL2 = DETAIL1 + LINE_PAD
 DETAIL3 = DETAIL2 + LINE_PAD
 
 FLUSH = ' '
+
+RED = "#ff0000"
+GREEN = "#00ff00"
+BLU = "#0000ff"
+
+DEFAULT_COLOR = "yellow"
 
 
 class OverlayManager:
@@ -51,7 +57,7 @@ class OverlayManager:
 
     def _send_to_socket(self, text, row, col, color, ttl, size):
         try:
-            self._overlay.send_message("edcmdrinfo_{}_{}".format(row, col),
+            self._overlay.send_message("omniscanner_{}_{}".format(row, col),
                                        text,
                                        color,
                                        col, row,
@@ -60,11 +66,21 @@ class OverlayManager:
         except Exception as e:
             print('Exception sending message to overlay '.format(e))
 
-    def display(self, text, row, col, color="yellow", size="normal"):
-        self._send_to_socket(text, row, col, color, config.get(TTL_CONFIG_KEY), size)
+    def display(self, text, row, col, color=DEFAULT_COLOR, size="normal"):
+        self._send_to_socket(text,
+                             row,
+                             col,
+                             color,
+                             config.get(TTL_CONFIG_KEY),
+                             size)
 
     def service_message(self, text, color):
-        self._send_to_socket(text, HEADER, COL1, color, ttl=2, size="large")
+        self._send_to_socket(text,
+                             HEADER,
+                             COL1,
+                             color,
+                             ttl=2,
+                             size="large")
 
     def flush(self):
         # unnecessary (maybe)
@@ -79,12 +95,30 @@ class OverlayManager:
         self.display_sect_title(FLUSH, COL1)
         self.display_sect_title(FLUSH, COL2)
         
-        self.warning(FLUSH, COL1)
-        self.warning(FLUSH, COL2)
+        self.display_warning(FLUSH, COL1)
+        self.display_warning(FLUSH, COL2)
         """
 
-    def notify(self, text):
-        self.display(text, row=HEADER, color="#00ff00", col=COL1, size="large")
+    def display_notification(self, text):
+        self.display(text,
+                     row=HEADER,
+                     color=GREEN,
+                     col=COL1,
+                     size="large")
+
+    def display_error(self, text):
+        self.display(text,
+                     row=DETAIL1,
+                     color=RED,
+                     col=COL1,
+                     size="large")
+
+    def display_warning(self, text, col):
+        self.display(text,
+                     row=DETAIL1,
+                     color=RED,
+                     col=col,
+                     size="large")
 
     def display_cmdr_name(self, text):
         self.display(text,
@@ -92,31 +126,17 @@ class OverlayManager:
                      col=COL1,
                      size="large")
 
-    def error(self, text):
-        self.display(text,
-                     row=DETAIL1,
-                     color="red",
-                     col=COL1,
-                     size="large")
-
-    def warning(self, text, col):
-        self.display(text,
-                     row=DETAIL1,
-                     color="red",
-                     col=col,
-                     size="large")
-
-    def display_sect_title(self, title, col):
-        self.display(title,
-                     row=INFO,
-                     color="#00ff00",
-                     col=col,
-                     size="large")
-
     def display_role(self, text):
         self.display(text,
                      row=SUB_HEADER,
                      col=COL1)
+
+    def display_sect_title(self, title, col):
+        self.display(title,
+                     row=INFO,
+                     color=GREEN,
+                     col=col,
+                     size="large")
 
     def display_info(self, reply):
         cmdr_data = parse_inara_reply(reply['inara'])
@@ -152,7 +172,7 @@ class OverlayManager:
 
             self.display(text, row=DETAIL1, col=COL1)
         else:
-            self.warning('No results', COL1)
+            self.display_warning('No results', COL1)
 
     def display_roa_info(self, data):
         self.display_sect_title("ROA DB", COL2)
@@ -167,4 +187,4 @@ class OverlayManager:
 
             self.display(text, row=DETAIL1, col=COL2)
         else:
-            self.warning('No results', COL2)
+            self.display_warning('No results', COL2)
