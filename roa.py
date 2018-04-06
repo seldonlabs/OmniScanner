@@ -3,7 +3,7 @@ from datetime import datetime
 
 from config import config
 
-ED_DATE_KEY = "EdCmdrInfoEDTime"
+ED_DATE_KEY = "OmniScannerEDTime"
 ED_DATE_VALUE = 1
 ED_TIME_DIFF = 1286
 
