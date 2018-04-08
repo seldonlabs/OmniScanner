@@ -14,7 +14,9 @@ An example of a response:
 ![example](example.png)
 
 ## Installation
-Simply unpack the plugin in the EDMC Plugin folder, restart ED Market Connector and pray the [Great Attractor][2].
+- Run the the installer for the latest version.
+- If you are installing OmniScanner for the first time you need to authorize `EDMCOverlay.exe` by running it from desktop at this location: `C:\Users\%USERPROFILE%\AppData\Local\EDMarketConnector\plugins\OmniScanner\EDMCOverlay\EDMCOverlay.exe`
+- Restart ED Market Connector and pray the [Great Attractor][2].
 
 ### Note for EDMCOverlay
 [EDMCOverlay][3] is an unsigned program so you need to "trust" it before running it, you can change its trust policies either by running it or using the file properties dialog.
@@ -45,6 +47,11 @@ Being an experimental feature these info will not be usable for now but only use
 ## Versions
 - 0.1.1: Add startup message with version check
 - 0.1.0: Initial testing version
+
+## Thanks
+- To Cmdr Artie for [Inara][0]
+- To Cmdr Lou Baron for access to the [ROA DB][1]
+- To Ian Norton for [EDMCOverlay][3]
 
 [0]:https://inara.cz
 [1]:http://roaweb20161109100616.azurewebsites.net/
