@@ -43,6 +43,7 @@ As an **experimental feature**, if you scan a commander that is flagged by ROA D
 Being an experimental feature these info will not be usable for now but only used for testing and see how it goes with a small/medium userbase.
 
 ## Versions
+- 0.1.1: Add startup message with version check
 - 0.1.0: Initial testing version
 
 [0]:https://inara.cz
