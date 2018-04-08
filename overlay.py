@@ -13,6 +13,7 @@ import roa
 TTL_CONFIG_KEY = "OmniScannerTTL"
 TTL_VALUE_DEFAULT = 8
 
+VERSION = 450
 HEADER = 380
 SUB_HEADER = 400
 INFO = 420
@@ -75,6 +76,14 @@ class OverlayManager:
                              color,
                              config.get(TTL_CONFIG_KEY),
                              size)
+
+    def version_message(self, text, color):
+        self._send_to_socket(text,
+                             VERSION,
+                             COL1,
+                             color,
+                             ttl=4,
+                             size="large")
 
     def service_message(self, text, color):
         self._send_to_socket(text,

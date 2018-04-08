@@ -46,6 +46,13 @@ def plugin_start():
         ED_DATE_FIELD.set(ED_DATE_VALUE)
         config.set(ED_DATE_KEY, ED_DATE_VALUE)
 
+    latest_ver = util.get_latest_version()
+
+    if util.is_latest_version(APP_VERSION, latest_ver):
+        _overlay.version_message("{} {}".format(APP_LONGNAME, APP_VERSION), "#00ff00")
+    else:
+        _overlay.version_message("{}: new version {} available".format(APP_LONGNAME, latest_ver), "yellow")
+
     print("{} {} loaded!".format(APP_LONGNAME, APP_VERSION))
 
 
