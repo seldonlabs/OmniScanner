@@ -14,7 +14,7 @@ from overlay import OverlayManager, TTL_CONFIG_KEY, TTL_VALUE_DEFAULT
 from roa import ED_DATE_KEY, ED_DATE_VALUE
 
 APP_LONGNAME = "OmniScanner"
-APP_VERSION = "0.1.1"
+APP_VERSION = "0.2.0"
 
 _cache = None
 _overlay = None

@@ -9,7 +9,7 @@ OmniScanner works only when another player is scanned (obviously), after the sca
 
 **Only open mode is supported**, this plugin deactivate itself in **solo** for obvious reasons and **private groups are not supported** (at least for now).
 
-An example of a response:
+An example response:
 
 ![example](example.png)
 
@@ -34,10 +34,10 @@ An example of a response:
 - Customizable date format with normal UTC and Elite UTC (330x years).
 - Automatic deactivation when deploying hardpoints.
 - Commander tracking for combat loggers (highly experimental, not public).
+- Customizable overlay through config file  (`overlay.ini`).
 
 ### Upcoming features
 - Commands for OmniScanner cache.
-- Customizable Overlay.
 
 ## Commander Tracking
 As an **experimental feature**, if you scan a commander that is flagged by ROA DB as **Combat Logger** or is in ROA **KOS list**, the position of the scanned commander will be logged and saved until another commander will update that entry with another scan.
@@ -45,13 +45,14 @@ As an **experimental feature**, if you scan a commander that is flagged by ROA D
 Being an experimental feature these info will not be usable for now but only used for testing and see how it goes with a small/medium userbase.
 
 ## Versions
-- 0.1.1: Add startup message with version check
-- 0.1.0: Initial testing version
+- 0.2.0: Customizable configuration for overlay.
+- 0.1.1: Add startup message with version check.
+- 0.1.0: Initial testing version.
 
 ## Thanks
-- To Cmdr Artie for [Inara][0]
-- To Cmdr Lou Baron for access to the [ROA DB][1]
-- To Ian Norton for [EDMCOverlay][3]
+- To Cmdr Artie for [Inara][0].
+- To Cmdr Lou Baron for access to the [ROA DB][1].
+- To Ian Norton for [EDMCOverlay][3].
 
 [0]:https://inara.cz
 [1]:http://roaweb20161109100616.azurewebsites.net/
