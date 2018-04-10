@@ -6,6 +6,7 @@ import sys
 import textwrap
 
 from config import config
+from omniconfig import OverlayConfig
 
 import inara
 import roa
@@ -13,38 +14,18 @@ import roa
 TTL_CONFIG_KEY = "OmniScannerTTL"
 TTL_VALUE_DEFAULT = 8
 
-VERSION = 450
-HEADER = 380
-SUB_HEADER = 400
-INFO = 420
-DETAIL = 420
-
-COL_PAD = 150
-COL1 = 95
-COL2 = COL1 + COL_PAD
-
-LINE_PAD = 25
-DETAIL1 = INFO + LINE_PAD
-DETAIL2 = DETAIL1 + LINE_PAD
-DETAIL3 = DETAIL2 + LINE_PAD
-
 FLUSH = ' '
-
-RED = "#ff0000"
-GREEN = "#00ff00"
-BLU = "#0000ff"
-
-DEFAULT_COLOR = "yellow"
 
 roa_template = [ 'Clan', 'Last update', 'Combat Logger', 'on KOS', 'Reason for KOS' ]
 
 class OverlayManager:
     _this_dir = os.path.abspath(os.path.dirname(__file__))
     _overlay_dir = os.path.join(_this_dir, "EDMCOverlay")
-    _overlay = None
     _line_template = u'{}: {}'
 
     def __init__(self):
+        self.config = OverlayConfig()
+
         if self._overlay_dir not in sys.path:
             print("adding {} to sys.path".format(self._overlay_dir))
             sys.path.append(self._overlay_dir)
@@ -60,101 +41,89 @@ class OverlayManager:
 
     def _send_to_socket(self, text, row, col, color, ttl, size):
         try:
-            self._overlay.send_message("omniscanner_{}_{}".format(row, col),
-                                       text,
-                                       color,
-                                       col, row,
-                                       ttl=ttl,
-                                       size=size)
+            self._overlay.send_message("omniscanner_{}_{}".format(row, col), text, color, col, row, ttl, size)
         except Exception as e:
             print('Exception sending message to overlay '.format(e))
 
-    def display(self, text, row, col, color=DEFAULT_COLOR, size="normal"):
-        self._send_to_socket(text,
-                             row,
-                             col,
-                             color,
-                             config.get(TTL_CONFIG_KEY),
-                             size)
+    def display(self, text, row, col, color, size="normal"):
+        self._send_to_socket(text, row, col, color,
+                             ttl=config.get(TTL_CONFIG_KEY),
+                             size=size)
 
     def version_message(self, text, color):
         self._send_to_socket(text,
-                             VERSION,
-                             COL1,
-                             color,
-                             ttl=4,
+                             row=self.config.get_pos_attr('version_row'),
+                             col=self.config.get_pos_attr('version_col'),
+                             color=color,
+                             ttl=self.config.get_ttl_attr('version_ttl'),
                              size="large")
 
     def service_message(self, text, color):
         self._send_to_socket(text,
-                             HEADER,
-                             COL1,
-                             color,
-                             ttl=2,
+                             row=self.config.get_pos_attr('service_row'),
+                             col=self.config.get_pos_attr('service_col'),
+                             color=color,
+                             ttl=self.config.get_ttl_attr('service_ttl'),
                              size="large")
 
     def flush(self):
-        # unnecessary (maybe)
-        # self.display_cmdr_name(FLUSH)
-
-        self.display(FLUSH, SUB_HEADER, COL1)
-        self.display(FLUSH, DETAIL1, COL1)
-        self.display(FLUSH, DETAIL1, COL2)
-
-        # unnecessary (maybe)
-        """
-        self.display_sect_title(FLUSH, COL1)
-        self.display_sect_title(FLUSH, COL2)
-        
-        self.display_warning(FLUSH, COL1)
-        self.display_warning(FLUSH, COL2)
-        """
+        self.display(FLUSH, self.config.get_pos_attr('sub_header_row'), self.config.get_pos_attr('first_col'), self.config.get_color_attr('text'))
+        self.display(FLUSH, self.config.get_pos_attr('detail_row'), self.config.get_pos_attr('first_col'), self.config.get_color_attr('text'))
+        self.display(FLUSH, self.config.get_pos_attr('detail_row'), self.config.get_pos_attr('second_col'), self.config.get_color_attr('text'))
 
     def display_notification(self, text):
         self.display(text,
-                     row=HEADER,
-                     color=GREEN,
-                     col=COL1,
+                     row=self.config.get_pos_attr('header_row'),
+                     col=self.config.get_pos_attr('first_col'),
+                     color=self.config.get_color_attr('notification'),
                      size="large")
 
     def display_error(self, text):
         self.display(text,
-                     row=DETAIL1,
-                     color=RED,
-                     col=COL1,
+                     row=self.config.get_pos_attr('detail_row'),
+                     col=self.config.get_pos_attr('first_col'),
+                     color=self.config.get_color_attr('error'),
                      size="large")
 
     def display_warning(self, text, col):
         self.display(text,
-                     row=DETAIL1,
-                     color=RED,
+                     row=self.config.get_pos_attr('detail_row'),
                      col=col,
+                     color=self.config.get_color_attr('warning'),
                      size="large")
 
     def display_cmdr_name(self, text):
         self.display(text,
-                     row=HEADER,
-                     col=COL1,
+                     row=self.config.get_pos_attr('header_row'),
+                     col=self.config.get_pos_attr('first_col'),
+                     color=self.config.get_color_attr('cmdr_name'),
                      size="large")
 
     def display_role(self, text):
         self.display(text,
-                     row=SUB_HEADER,
-                     col=COL1)
+                     row=self.config.get_pos_attr('sub_header_row'),
+                     col=self.config.get_pos_attr('first_col'),
+                     color=self.config.get_color_attr('cmdr_role'))
 
     def display_section_title(self, title, col):
         self.display(title,
-                     row=INFO,
-                     color=GREEN,
+                     row=self.config.get_pos_attr('info_row'),
                      col=col,
+                     color=self.config.get_color_attr('sect_title'),
                      size="large")
+
+    def display_section(self, text, col):
+        self.display(text,
+                     row=self.config.get_pos_attr('detail_row'),
+                     col=col,
+                     color=self.config.get_color_attr('text'))
 
     def display_info(self, reply):
         inara_data = inara.parse_reply(reply['inara'])
         roa_data = roa.parse_reply(reply['roa'])
 
-        self.display_section_title("Inara", COL1)
-        self.display_section_title("ROA DB", COL2)
+        self.display_section_title("Inara", self.config.get_pos_attr('first_col'))
+        self.display_section_title("ROA DB", self.config.get_pos_attr('second_col'))
 
         if inara_data:
             if 'role' in inara_data:
@@ -162,11 +131,9 @@ class OverlayManager:
 
             text = '\n'.join(self._format_inara_data(inara_data))
 
-            self.display(text,
-                         row=DETAIL1,
-                         col=COL1)
+            self.display_section(text, self.config.get_pos_attr('first_col'))
         else:
-            self.display_warning('No results', COL1)
+            self.display_warning('No results', self.config.get_pos_attr('first_col'))
 
         if roa_data:
             formatted_data = self._format_roa_data(roa_data)
@@ -179,11 +146,9 @@ class OverlayManager:
             else:
                 text = '\n'.join(formatted_data)
 
-            self.display(text,
-                         row=DETAIL1,
-                         col=COL2)
+            self.display_section(text, self.config.get_pos_attr('second_col'))
         else:
-            self.display_warning('No results', COL2)
+            self.display_warning('No results', self.config.get_pos_attr('second_col'))
 
     def _format_inara_data(self, data):
         lines = []
