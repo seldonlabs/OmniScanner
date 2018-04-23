@@ -11,10 +11,10 @@ import util
 import net
 from cache import Cache
 from overlay import OverlayManager, TTL_CONFIG_KEY, TTL_VALUE_DEFAULT
-from roa import ED_DATE_KEY, ED_DATE_VALUE
+from roa import DISABLE_ED_TIME_KEY
 
 APP_LONGNAME = "OmniScanner"
-APP_VERSION = "0.2.0"
+APP_VERSION = "0.2.1"
 
 _cache = None
 _overlay = None
@@ -25,8 +25,12 @@ _hardpoints_deployed = False
 TTL_LABEL = "Overlay duration (in seconds)"
 TTL_FIELD = tk.StringVar(value=config.get(TTL_CONFIG_KEY))
 
-ED_DATE_LABEL = "Elite time"
-ED_DATE_FIELD = tk.IntVar(value=config.get(ED_DATE_KEY))
+DISABLE_ED_TIME_LABEL = "Disable Elite time"
+DISABLE_ED_TIME_FIELD = tk.IntVar(value=config.get(DISABLE_ED_TIME_KEY))
+
+DISABLE_SERVICE_MSG_KEY = "OmniScannerDisableSrvMsgs"
+DISABLE_SERVICE_MSG_LABEL = "Disable Service messages"
+DISABLE_SERVICE_MSG_FIELD = tk.IntVar(value=config.get(DISABLE_SERVICE_MSG_KEY))
 
 
 def plugin_start():
@@ -42,9 +46,8 @@ def plugin_start():
         TTL_FIELD.set(str(TTL_VALUE_DEFAULT))
         config.set(TTL_CONFIG_KEY, str(TTL_VALUE_DEFAULT))
 
-    if not ED_DATE_FIELD.get():
-        ED_DATE_FIELD.set(ED_DATE_VALUE)
-        config.set(ED_DATE_KEY, ED_DATE_VALUE)
+    DISABLE_ED_TIME_FIELD.set(config.getint(DISABLE_ED_TIME_KEY))
+    DISABLE_SERVICE_MSG_FIELD.set(config.getint(DISABLE_SERVICE_MSG_KEY))
 
     latest_ver = util.get_latest_version()
 
@@ -82,10 +85,15 @@ def plugin_prefs(parent):
     nb.Entry(frame, textvariable=TTL_FIELD) \
         .grid(padx=PADX, pady=PADY, row=ROW1, column=1, sticky=tk.EW)
 
-    nb.Label(frame, text=ED_DATE_LABEL) \
+    nb.Label(frame, text=DISABLE_ED_TIME_LABEL) \
         .grid(padx=PADX, pady=PADY, row=ROW2, sticky=tk.W)
-    nb.Checkbutton(frame, text='If checked use Elite 330x date format', variable=ED_DATE_FIELD) \
+    nb.Checkbutton(frame, text='Use normal UTC time instead of Elite 330x time', variable=DISABLE_ED_TIME_FIELD) \
         .grid(padx=PADX, pady=PADY, row=ROW2, column=1, sticky=tk.W)
+
+    nb.Label(frame, text=DISABLE_SERVICE_MSG_LABEL) \
+        .grid(padx=PADX, pady=PADY, row=ROW3, sticky=tk.W)
+    nb.Checkbutton(frame, text='Disable activation/deactivation messages', variable=DISABLE_SERVICE_MSG_FIELD) \
+        .grid(padx=PADX, pady=PADY, row=ROW3, column=1, sticky=tk.W)
 
     return frame
 
@@ -95,7 +103,8 @@ def prefs_changed():
     Handle plugin preferences
     """
     config.set(TTL_CONFIG_KEY, TTL_FIELD.get())
-    config.set(ED_DATE_KEY, ED_DATE_FIELD.get())
+    config.set(DISABLE_ED_TIME_KEY, DISABLE_ED_TIME_FIELD.get())
+    config.set(DISABLE_SERVICE_MSG_KEY, DISABLE_SERVICE_MSG_FIELD.get())
 
 
 def plugin_stop():
@@ -126,11 +135,11 @@ def dashboard_entry(cmdr, is_beta, entry):
         if not _is_in_SC:
             _hardpoints_deployed = flags & plug.FlagsHardpointsDeployed
             if _hardpoints_deployed:
-                if _flag_status + 64 == flags:
+                if _flag_status + 64 == flags and not config.getint(DISABLE_SERVICE_MSG_KEY):
                     _overlay.service_message('{} deactivated'.format(APP_LONGNAME), "#ff0000")
                 _flag_status = flags
             else:
-                if _flag_status - 64 == flags:
+                if _flag_status - 64 == flags and not config.getint(DISABLE_SERVICE_MSG_KEY):
                     _overlay.service_message('{} activated'.format(APP_LONGNAME), "#00ff00")
                 _flag_status = flags
 

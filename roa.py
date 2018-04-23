@@ -3,8 +3,7 @@ from datetime import datetime
 
 from config import config
 
-ED_DATE_KEY = "OmniScannerEDTime"
-ED_DATE_VALUE = 1
+DISABLE_ED_TIME_KEY = "OmniScannerDisableEDTime"
 ED_TIME_DIFF = 1286
 
 roa_labels = {
@@ -30,7 +29,7 @@ def _parse_epoch(date):
 
     time = datetime.utcfromtimestamp(secs)
 
-    year = time.year + ED_TIME_DIFF if config.getint(ED_DATE_KEY) else time.year
+    year = time.year + ED_TIME_DIFF if not config.getint(DISABLE_ED_TIME_KEY) else time.year
     month = time.month
     day = time.day
 
