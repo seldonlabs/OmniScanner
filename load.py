@@ -155,6 +155,21 @@ def dashboard_entry(cmdr, is_beta, entry):
                 _flag_status = flags
 
 
+def panel_update():
+    """
+    Update EDMC panel entry for OmniScanner
+    :return:
+    """
+    if not this.is_latest_ver:
+        this.status["text"] = "v{} available".format(this.latest_ver)
+        this.status["fg"] = "yellow"
+    elif not util.is_mode():
+        this.status["text"] = "disabled in Solo/Private."
+        this.status["fg"] = "red"
+    else:
+        this.status["text"] = "Ready"
+        this.status["fg"] = "green"
+
 
 def journal_entry(cmdr, is_beta, system, station, entry, state):
     """
@@ -168,20 +183,9 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     :return:
     """
 
-    global _hardpoints_deployed
+    panel_update()
 
-    if not util.is_mode():
-        this.status["text"] = "disabled in Solo/Private."
-        this.status["fg"] = "red"
-    elif util.is_mode() == 'no-instance':
-        this.status["text"] = "No ED process"
-        this.status["fg"] = "red"
-    elif not this.is_latest_ver:
-        this.status["text"] = "v{} available".format(this.latest_ver)
-        this.status["fg"] = "yellow"
-    else:
-        this.status["text"] = "Ready"
-        this.status["fg"] = "green"
+    global _hardpoints_deployed
 
     if not is_beta and util.is_mode() and not _hardpoints_deployed:
         if util.is_target_locked(entry):
@@ -207,7 +211,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
                     if cache_data:
                         cmdr_data = cache_data
                     else:
-                        cmdr_data = net.call_srv(cmdr, system, search_name)
+                        cmdr_data = net.call_srv(APP_VERSION, cmdr, system, search_name)
 
                     if not 'error' in cmdr_data:
                         _cache.add_to_cache(search_name, cmdr_data)

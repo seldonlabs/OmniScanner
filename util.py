@@ -6,7 +6,7 @@ REPO_URL = "https://api.github.com/repos/seldonlabs/OmniScanner/tags"
 
 
 def is_mode():
-    return monitor.mode.lower() == 'open' if monitor.mode else 'no-instance'
+    return monitor.mode.lower() == 'open'
 
 
 def is_target_locked(entry):
