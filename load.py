@@ -15,7 +15,7 @@ from overlay import OverlayManager, TTL_CONFIG_KEY, TTL_VALUE_DEFAULT
 from roa import DISABLE_ED_TIME_KEY
 
 APP_LONGNAME = "OmniScanner"
-APP_VERSION = "0.2.1"
+APP_VERSION = "0.3.0"
 
 this = sys.modules[__name__]
 

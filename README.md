@@ -45,6 +45,8 @@ As an **experimental feature**, if you scan a commander that is flagged by ROA D
 Being an experimental feature these info will not be usable for now but only used for testing and see how it goes with a small/medium userbase.
 
 ## Versions
+- 0.3.0: Add status message on EDMC panel.
+- 0.2.1: Update EDMCOverlay version.
 - 0.2.0: Customizable configuration for overlay.
 - 0.1.1: Add startup message with version check.
 - 0.1.0: Initial testing version.
