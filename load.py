@@ -1,6 +1,7 @@
 """
 OmniScanner by Seldonlabs
 """
+import sys
 import plug
 import Tkinter as tk
 import myNotebook as nb
@@ -15,6 +16,8 @@ from roa import DISABLE_ED_TIME_KEY
 
 APP_LONGNAME = "OmniScanner"
 APP_VERSION = "0.2.1"
+
+this = sys.modules[__name__]
 
 _cache = None
 _overlay = None
@@ -49,14 +52,22 @@ def plugin_start():
     DISABLE_ED_TIME_FIELD.set(config.getint(DISABLE_ED_TIME_KEY))
     DISABLE_SERVICE_MSG_FIELD.set(config.getint(DISABLE_SERVICE_MSG_KEY))
 
-    latest_ver = util.get_latest_version()
-
-    if util.is_latest_version(APP_VERSION, latest_ver):
-        _overlay.version_message("{} {}".format(APP_LONGNAME, APP_VERSION), "#00ff00")
-    else:
-        _overlay.version_message("{}: new version {} available".format(APP_LONGNAME, latest_ver), "yellow")
+    this.latest_ver = util.get_latest_version()
+    this.is_latest_ver = util.is_latest_version(APP_VERSION, this.latest_ver)
 
     print("{} {} loaded!".format(APP_LONGNAME, APP_VERSION))
+
+
+def plugin_app(parent):
+   """
+   Create a pair of TK widgets for the EDMC main window
+   """
+   latest_ver = util.get_latest_version()
+
+   label = tk.Label(parent, text="Omni:")
+   this.status = tk.Label(parent, anchor=tk.W, text="", fg="white")
+
+   return (label, this.status)
 
 
 def plugin_prefs(parent):
@@ -158,6 +169,19 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     """
 
     global _hardpoints_deployed
+
+    if not util.is_mode():
+        this.status["text"] = "disabled in Solo/Private."
+        this.status["fg"] = "red"
+    elif util.is_mode() == 'no-instance':
+        this.status["text"] = "No ED process"
+        this.status["fg"] = "red"
+    elif not this.is_latest_ver:
+        this.status["text"] = "v{} available".format(this.latest_ver)
+        this.status["fg"] = "yellow"
+    else:
+        this.status["text"] = "Ready"
+        this.status["fg"] = "green"
 
     if not is_beta and util.is_mode() and not _hardpoints_deployed:
         if util.is_target_locked(entry):
