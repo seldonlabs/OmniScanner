@@ -8,6 +8,7 @@ from ttkHyperlinkLabel import HyperlinkLabel
 from config import config
 from theme import theme
 
+import omniutils as ou
 from omniconfig import configuration
 from cache import cacheDatabase
 import inara
@@ -107,11 +108,20 @@ class OmniLog(tk.OptionMenu):
         self._log = log
 
         self.val = tk.StringVar()
-        init_val = log['history'][0]
-        self.val.set(init_val)
 
-        tk.OptionMenu.__init__(self, parent, self.val, init_val, *self._log['history'][1:],
-                               command=self.__on_option_change, **kwargs)
+        if log['history']:
+            init_val = log['history'][0]
+            self.val.set(init_val)
+
+            tk.OptionMenu.__init__(self, parent, self.val, init_val, *log['history'][1:],
+                                   command=self.__on_option_change, **kwargs)
+        else:
+            init_val = "Empty"
+            self.val.set(init_val)
+
+            tk.OptionMenu.__init__(self, parent, self.val, init_val, *[],
+                                   command=self.__on_option_change, **kwargs)
+
         self.config(highlightthickness=0)
         self.pack(anchor=tk.W, side=tk.LEFT)
         theme.register(self)
@@ -122,7 +132,10 @@ class OmniLog(tk.OptionMenu):
         :param event:
         :return:
         """
-        self._out.set_output(self._log['log'][event])
+        try:
+            self._out.set_output(self._log['log'][event])
+        except Exception:
+            ou.warn("Error: cannot find key \"{}\" in log!".format(event))
 
     def update_selection_list(self, log):
         """
@@ -258,8 +271,9 @@ class Gui:
 
         OmniCredits(main_frame)
 
-        # Show last entry on init
-        self._show_latest_entry()
+        # Show last entry on init, if history is not empty
+        if self.__scans['history']:
+            self._show_latest_entry()
 
         return container
 
