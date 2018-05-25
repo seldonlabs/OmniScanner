@@ -1,56 +1,93 @@
+"""
+ROA parsers
+"""
+
 import re
+import textwrap
 from datetime import datetime
 
 from config import config
+import omniconfig as oc
 
-DISABLE_ED_TIME_KEY = "OmniScannerDisableEDTime"
 ED_TIME_DIFF = 1286
-
-roa_labels = {
-    'Clan': 'Clan',
-    'isClogger': 'Combat Logger',
-    'isKOS': 'on KOS',
-    'KOSdesc': 'Reason for KOS',
-    'lastUPD': 'Last update'
-}
-
-
 rgx = 'Date\(([0-9]+)\+.*\)'
 
 
-def _bool_to_str(boolVal):
+def _format_bool(boolVal):
     return 'YES' if boolVal else 'NO'
 
 
-def _parse_epoch(date):
+def _format_epoch(date):
     m = re.search(rgx, date)
 
     secs = int(m.group(1)) / 1000
 
     time = datetime.utcfromtimestamp(secs)
 
-    year = time.year + ED_TIME_DIFF if not config.getint(DISABLE_ED_TIME_KEY) else time.year
+    year = time.year + ED_TIME_DIFF if not config.getint(oc.DISABLE_ED_TIME_KEY) else time.year
     month = time.month
     day = time.day
 
-    return '{}-{}-{}'.format(year, month, day)
+    return "{}-{}-{}".format(year, month, day)
 
 
-def parse_reply(reply):
-    data = None
-
+def parse_reply_for_gui(reply):
     cmdrData = reply['cmdrData']
+    parsed_data = None
 
     if cmdrData:
-        data = {}
+        if 'Clan' in cmdrData:
+            parsed_data = []
 
-        for key in cmdrData:
-            if key == 'isKOS' or key == 'isClogger':
-                data[roa_labels[key]] = _bool_to_str(cmdrData[key])
-            elif key == 'lastUPD':
-                data[roa_labels[key]] = _parse_epoch(cmdrData[key])
-            else:
-                if cmdrData[key]:
-                    data[roa_labels[key]] = cmdrData[key]
+            if cmdrData['Clan'] != "inara unknown":
+                parsed_data.append({
+                    'text': cmdrData['Clan'].decode('unicode-escape')
+                })
 
-    return data
+            parsed_data.append({
+                'text': "{}: {}".format("Last update", _format_epoch(cmdrData['lastUPD']))
+            })
+
+            if cmdrData['isClogger']:
+                parsed_data.append({
+                    'text': "Combat Logger",
+                    'tag': "cl"
+                })
+
+            if cmdrData['isKOS']:
+                parsed_data.append({
+                    'text': "Kill on Sight by ROA",
+                    'tag': "kos"
+                })
+
+                if 'KOSdesc' in cmdrData:
+                    parsed_data.append({
+                        'text': cmdrData['KOSdesc'].decode('unicode-escape')
+                    })
+
+    return parsed_data
+
+
+def parse_reply_for_overlay(reply):
+    data = reply['cmdrData']
+    line_template = u"{}: {}"
+    lines = None
+
+    if data:
+        lines = []
+
+        if 'Clan' in data:
+            lines.append(u'{}'.format(data['Clan']))
+
+        if 'lastUPD' in data:
+            lines.append(line_template.format('Last update:', _format_epoch(data['lastUPD'])))
+
+        if 'isClogger' in data:
+            lines.append(line_template.format('Combat logger', _format_bool(data['isClogger'])))
+
+        if 'isKOS' in data:
+            lines.append(line_template.format('Kill on Sight', _format_bool(data['isKOS'])))
+            if data['isKOS']:
+                lines.append(u'\n{}: \n{}'.format('Reason for KOS', textwrap.fill(data['KOSdesc'], 20)))
+
+    return lines

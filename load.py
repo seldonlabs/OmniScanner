@@ -1,73 +1,84 @@
 """
-OmniScanner by Seldonlabs
+OmniScanner by SeldonLabs
 """
-import sys
-import plug
-import Tkinter as tk
-import myNotebook as nb
 
+import Tkinter as tk
+
+import myNotebook as nb
+import plug
 from config import config
 
-import util
-import net
-from cache import Cache
-from overlay import OverlayManager, TTL_CONFIG_KEY, TTL_VALUE_DEFAULT
-from roa import DISABLE_ED_TIME_KEY
+import omniutils as ou
+import omniconfig as oc
+from cache import cacheDatabase
+from gui import Gui
+from overlay import OverlayManager
 
 APP_LONGNAME = "OmniScanner"
-APP_VERSION = "0.3.0"
+APP_VERSION = "0.4.0"
 
-this = sys.modules[__name__]
-
-_cache = None
+_gui = None
+_enable_overlay = False
 _overlay = None
-
+_latest_ver = 0
+_is_latest_ver = False
 _flag_status = 0
 _hardpoints_deployed = False
-
-TTL_LABEL = "Overlay duration (in seconds)"
-TTL_FIELD = tk.StringVar(value=config.get(TTL_CONFIG_KEY))
-
-DISABLE_ED_TIME_LABEL = "Disable Elite time"
-DISABLE_ED_TIME_FIELD = tk.IntVar(value=config.get(DISABLE_ED_TIME_KEY))
-
-DISABLE_SERVICE_MSG_KEY = "OmniScannerDisableSrvMsgs"
-DISABLE_SERVICE_MSG_LABEL = "Disable Service messages"
-DISABLE_SERVICE_MSG_FIELD = tk.IntVar(value=config.get(DISABLE_SERVICE_MSG_KEY))
+_padx = 10
+_pady = 2
 
 
 def plugin_start():
     """
     Load this plugin into EDMC
     """
-    global _cache
+    global _gui
+    global _enable_overlay
     global _overlay
-    _cache = Cache()
-    _overlay = OverlayManager()
+    global _latest_ver
+    global _is_latest_ver
 
-    if not TTL_FIELD.get():
-        TTL_FIELD.set(str(TTL_VALUE_DEFAULT))
-        config.set(TTL_CONFIG_KEY, str(TTL_VALUE_DEFAULT))
+    _gui = Gui()
 
-    DISABLE_ED_TIME_FIELD.set(config.getint(DISABLE_ED_TIME_KEY))
-    DISABLE_SERVICE_MSG_FIELD.set(config.getint(DISABLE_SERVICE_MSG_KEY))
+    # checking for overlay
+    _enable_overlay = config.getint(oc.ENABLE_OVERLAY_KEY)
 
-    this.latest_ver = util.get_latest_version()
-    this.is_latest_ver = util.is_latest_version(APP_VERSION, this.latest_ver)
+    # enable EDMCOverlay
+    if _enable_overlay:
+        try:
+            import edmcoverlay
+            _overlay = OverlayManager(edmcoverlay.Overlay())
+            ou.notify("Overlay is on.")
+        except ImportError:
+            ou.warn("Overlay is enabled but EDMCOverlay plugin not installed!")
 
-    print("{} {} loaded!".format(APP_LONGNAME, APP_VERSION))
+    # set gui options
+    if not oc.TTL_FIELD.get():
+        oc.TTL_FIELD.set(str(oc.TTL_VALUE_DEFAULT))
+        config.set(oc.TTL_CONFIG_KEY, str(oc.TTL_VALUE_DEFAULT))
+
+    oc.ENABLE_OVERLAY_FIELD.set(_enable_overlay)
+    oc.DISABLE_ED_TIME_FIELD.set(config.getint(oc.DISABLE_ED_TIME_KEY))
+    oc.DISABLE_SERVICE_MSG_FIELD.set(config.getint(oc.DISABLE_SERVICE_MSG_KEY))
+
+    try:
+        _latest_ver = ou.get_latest_version()
+        _is_latest_ver = ou.is_latest_version(APP_VERSION, _latest_ver)
+    except Exception as ex:
+        ou.warn(ex)
+        # Set latest version anyway on error
+        _is_latest_ver = True
+
+    ou.notify("version {} loaded!".format(APP_VERSION))
 
 
 def plugin_app(parent):
-   """
-   Create a pair of TK widgets for the EDMC main window
-   """
-   latest_ver = util.get_latest_version()
-
-   label = tk.Label(parent, text="Omni:")
-   this.status = tk.Label(parent, anchor=tk.W, text="", fg="white")
-
-   return (label, this.status)
+    """
+    Create a pair of TK widgets for the EDMC main window
+    :param parent:
+    :return:
+    """
+    return _gui.init_gui(parent)
 
 
 def plugin_prefs(parent):
@@ -76,35 +87,37 @@ def plugin_prefs(parent):
     :param parent:
     :return:
     """
-    PADX = 10
-    PADY = 2
-
-    ROW0 = 8
-    ROW1 = 10
-    ROW2 = 12
-    ROW3 = 14
-
-    BUTTONX = 12
-
     frame = nb.Frame(parent)
     frame.columnconfigure(1, weight=1)
 
-    nb.Label(frame, text=APP_LONGNAME).grid(padx=PADX, row=ROW0, sticky=tk.W)
+    nb.Label(frame, text="Scanner Options", fg="blue")\
+        .grid(padx=_padx, row=0, sticky=tk.W)
 
-    nb.Label(frame, text=TTL_LABEL) \
-        .grid(padx=PADX, pady=PADY, row=ROW1, sticky=tk.W)
-    nb.Entry(frame, textvariable=TTL_FIELD) \
-        .grid(padx=PADX, pady=PADY, row=ROW1, column=1, sticky=tk.EW)
+    nb.Label(frame, text="Disable Elite time") \
+        .grid(padx=_padx, pady=_pady, row=1, sticky=tk.W)
+    nb.Checkbutton(frame, text="Use normal UTC time instead of Elite 330x time.",
+                   variable=oc.DISABLE_ED_TIME_FIELD) \
+        .grid(padx=_padx, pady=_pady, row=1, column=1, sticky=tk.W)
 
-    nb.Label(frame, text=DISABLE_ED_TIME_LABEL) \
-        .grid(padx=PADX, pady=PADY, row=ROW2, sticky=tk.W)
-    nb.Checkbutton(frame, text='Use normal UTC time instead of Elite 330x time', variable=DISABLE_ED_TIME_FIELD) \
-        .grid(padx=PADX, pady=PADY, row=ROW2, column=1, sticky=tk.W)
+    nb.Label(frame, text="Overlay Options (You have to install EDMCOverlay)", fg="blue")\
+        .grid(padx=_padx, row=5, sticky=tk.W)
 
-    nb.Label(frame, text=DISABLE_SERVICE_MSG_LABEL) \
-        .grid(padx=PADX, pady=PADY, row=ROW3, sticky=tk.W)
-    nb.Checkbutton(frame, text='Disable activation/deactivation messages', variable=DISABLE_SERVICE_MSG_FIELD) \
-        .grid(padx=PADX, pady=PADY, row=ROW3, column=1, sticky=tk.W)
+    nb.Label(frame, text="Use Overlay") \
+        .grid(padx=_padx, pady=_pady, row=6, sticky=tk.W)
+    nb.Checkbutton(frame, text="Use EDMCOverlay (you need to restart EDMC).",
+                   variable=oc.ENABLE_OVERLAY_FIELD) \
+        .grid(padx=_padx, pady=_pady, row=6, column=1, sticky=tk.W)
+
+    nb.Label(frame, text="Overlay duration (in seconds)") \
+        .grid(padx=_padx, pady=_pady, row=7, sticky=tk.W)
+    nb.Entry(frame, textvariable=oc.TTL_FIELD) \
+        .grid(padx=_padx, pady=_pady, row=7, column=1, sticky=tk.EW)
+
+    nb.Label(frame, text="Disable service messages") \
+        .grid(padx=_padx, pady=_pady, row=8, sticky=tk.W)
+    nb.Checkbutton(frame, text="Disable activation/deactivation messages (Overlay only).",
+                   variable=oc.DISABLE_SERVICE_MSG_FIELD) \
+        .grid(padx=_padx, pady=_pady, row=8, column=1, sticky=tk.W)
 
     return frame
 
@@ -113,18 +126,22 @@ def prefs_changed():
     """
     Handle plugin preferences
     """
-    config.set(TTL_CONFIG_KEY, TTL_FIELD.get())
-    config.set(DISABLE_ED_TIME_KEY, DISABLE_ED_TIME_FIELD.get())
-    config.set(DISABLE_SERVICE_MSG_KEY, DISABLE_SERVICE_MSG_FIELD.get())
+    config.set(oc.DISABLE_ED_TIME_KEY, oc.DISABLE_ED_TIME_FIELD.get())
+    config.set(oc.ENABLE_OVERLAY_KEY, oc.ENABLE_OVERLAY_FIELD.get())
+    config.set(oc.TTL_CONFIG_KEY, oc.TTL_FIELD.get())
+    config.set(oc.DISABLE_SERVICE_MSG_KEY, oc.DISABLE_SERVICE_MSG_FIELD.get())
 
 
 def plugin_stop():
     """
     Close plugin
     """
-    global _cache
-    _cache.close()
-    print("Closing {}".format(APP_LONGNAME))
+    cacheDatabase.close()
+
+    if _overlay:
+        _overlay.shutdown()
+
+    ou.notify("shutting down")
 
 
 def dashboard_entry(cmdr, is_beta, entry):
@@ -135,40 +152,43 @@ def dashboard_entry(cmdr, is_beta, entry):
     :param entry:
     :return:
     """
-    global _overlay
     global _hardpoints_deployed
     global _flag_status
 
-    if not is_beta:
+    # only if overlay is on
+    if not is_beta and _enable_overlay:
         flags = entry['Flags']
         _is_in_SC = flags & plug.FlagsSupercruise
 
+        # not in SC
         if not _is_in_SC:
             _hardpoints_deployed = flags & plug.FlagsHardpointsDeployed
             if _hardpoints_deployed:
-                if _flag_status + 64 == flags and not config.getint(DISABLE_SERVICE_MSG_KEY):
-                    _overlay.service_message('{} deactivated'.format(APP_LONGNAME), "#ff0000")
+                if _flag_status + 64 == flags and not config.getint(oc.DISABLE_SERVICE_MSG_KEY):
+                    _overlay.service_message("{} disabled".format(APP_LONGNAME), "#ff0000")
+                    status_update()
                 _flag_status = flags
             else:
-                if _flag_status - 64 == flags and not config.getint(DISABLE_SERVICE_MSG_KEY):
-                    _overlay.service_message('{} activated'.format(APP_LONGNAME), "#00ff00")
+                if _flag_status - 64 == flags and not config.getint(oc.DISABLE_SERVICE_MSG_KEY):
+                    _overlay.service_message("{} enabled".format(APP_LONGNAME), "#00ff00")
+                    status_update()
                 _flag_status = flags
 
 
-def panel_update():
+def status_update():
     """
     Update EDMC panel entry for OmniScanner
     :return:
     """
-    if not this.is_latest_ver:
-        this.status["text"] = "v{} available".format(this.latest_ver)
-        this.status["fg"] = "yellow"
-    elif not util.is_mode():
-        this.status["text"] = "disabled in Solo/Private."
-        this.status["fg"] = "red"
+    if not _is_latest_ver:
+        _gui.status.set_new_version_message(_latest_ver)
+    elif _hardpoints_deployed:
+        _gui.status.set_disabled_on_hp()
     else:
-        this.status["text"] = "Ready"
-        this.status["fg"] = "green"
+        if not ou.is_mode():
+            _gui.status.set_disabled_on_solo_pvt()
+        else:
+            _gui.status.set_ready()
 
 
 def journal_entry(cmdr, is_beta, system, station, entry, state):
@@ -182,43 +202,53 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     :param state:
     :return:
     """
+    if not is_beta:
+        status_update()
 
-    panel_update()
+        if ou.is_mode() and not _hardpoints_deployed:
+            if ou.is_target_locked(entry):
+                if ou.is_scanned(entry):
+                    coded_pilot_name = entry['PilotName'].split(':')
 
-    global _hardpoints_deployed
+                    if coded_pilot_name[0] == "$cmdr_decorate":
+                        search_name = coded_pilot_name[1][6:-1]
 
-    if not is_beta and util.is_mode() and not _hardpoints_deployed:
-        if util.is_target_locked(entry):
-            if util.is_scanned(entry):
-                global _cache
-                global _overlay
+                        pilot_name_localised = entry['PilotName_Localised']
 
-                coded_pilot_name = entry['PilotName'].split(':')
+                        # log message
+                        ou.notify(u"Looking for {}".format(pilot_name_localised))
 
-                if coded_pilot_name[0] == "$cmdr_decorate":
-                    # flush overlay
-                    _overlay.flush()
+                        # gui update
+                        _gui.status.set_querying_msg(pilot_name_localised)
 
-                    search_name = coded_pilot_name[1][6:-1]
+                        # overlay update
+                        if _overlay:
+                            _overlay.display_notification("Getting info for {}".format(pilot_name_localised))
 
-                    print(u'{}: looking for {}'.format(APP_LONGNAME, search_name))
+                        # get data from cache
+                        cache_data = cacheDatabase.check(search_name)
 
-                    pilot_name_localised = entry['PilotName_Localised']
-                    _overlay.display_notification(u'Getting info for {}'.format(pilot_name_localised))
+                        if cache_data:
+                            cmdr_data = cache_data
+                        else:
+                            cmdr_data = ou.call_srv(APP_VERSION, cmdr, system, search_name)
 
-                    cache_data = _cache.check(search_name)
+                        if not 'error' in cmdr_data:
+                            # Add scan to cache
+                            cacheDatabase.add_to_cache(search_name, cmdr_data)
 
-                    if cache_data:
-                        cmdr_data = cache_data
-                    else:
-                        cmdr_data = net.call_srv(APP_VERSION, cmdr, system, search_name)
+                            # Update GUI log and show result on gui
+                            _gui.update_log()
 
-                    if not 'error' in cmdr_data:
-                        _cache.add_to_cache(search_name, cmdr_data)
+                            # Show result on overlay
+                            if _enable_overlay:
+                                _overlay.display_info(pilot_name_localised, cmdr_data)
 
-                        _overlay.display_cmdr_name(pilot_name_localised)
-                        _overlay.display_info(cmdr_data)
-                    else:
-                        _overlay.display_error(cmdr_data['error'])
-        #elif util.is_target_unlocked(entry):
-         #   _overlay.flush()
+                            # update status again after querying message
+                            status_update()
+                        else:
+                            # display error
+                            _gui.status.set_error(cmdr_data['error'])
+
+                            if _enable_overlay:
+                                _overlay.display_error(cmdr_data['error'])

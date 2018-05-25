@@ -1,178 +1,172 @@
 """"
-OverlayManager
+Overlay manager
 """
-import os
-import sys
-import textwrap
 
 from config import config
-from omniconfig import OverlayConfig
 
+import omniconfig
+import omniutils as ou
+from omniconfig import configuration as oc
 import inara
 import roa
 
-TTL_CONFIG_KEY = "OmniScannerTTL"
-TTL_VALUE_DEFAULT = 8
+FLUSH = " "
 
-FLUSH = ' '
-
-roa_template = [ 'Clan', 'Last update', 'Combat Logger', 'on KOS', 'Reason for KOS' ]
 
 class OverlayManager:
-    _this_dir = os.path.abspath(os.path.dirname(__file__))
-    _overlay_dir = os.path.join(_this_dir, "EDMCOverlay")
-    _line_template = u'{}: {}'
+    _line_template = u"{}: {}"
 
-    def __init__(self):
-        self.config = OverlayConfig()
+    def __init__(self, overlay_instance):
+        self._overlay = overlay_instance
 
-        if self._overlay_dir not in sys.path:
-            print("adding {} to sys.path".format(self._overlay_dir))
-            sys.path.append(self._overlay_dir)
-
-        try:
-            import edmcoverlay
-        except ImportError:
-            print(sys.path)
-            self._overlay = None
-            raise Exception(str(sys.path))
-
-        self._overlay = edmcoverlay.Overlay()
-
-    def _send_to_socket(self, text, row, col, color, ttl, size):
+    def __send_to_socket(self, text, row, col, color, ttl, size):
         try:
             self._overlay.send_message("omniscanner_{}_{}".format(row, col), text, color, col, row, ttl, size)
         except Exception as e:
-            print('Exception sending message to overlay '.format(e))
+            ou.warn("Exception sending message to overlay: {}".format(e))
 
     def display(self, text, row, col, color, size="normal"):
-        self._send_to_socket(text, row, col, color,
-                             ttl=config.get(TTL_CONFIG_KEY),
-                             size=size)
+        self.__send_to_socket(text, row, col, color,
+                              ttl=config.get(omniconfig.TTL_CONFIG_KEY),
+                              size=size)
 
     def version_message(self, text, color):
-        self._send_to_socket(text,
-                             row=self.config.get_pos_attr('version_row'),
-                             col=self.config.get_pos_attr('version_col'),
-                             color=color,
-                             ttl=self.config.get_ttl_attr('version_ttl'),
-                             size="large")
+        self.__send_to_socket(text,
+                              row=oc.get_overlay_layout("version_row"),
+                              col=oc.get_overlay_layout("version_col"),
+                              color=color,
+                              ttl=oc.get_overlay_ttl("version_ttl"),
+                              size="large")
 
     def service_message(self, text, color):
-        self._send_to_socket(text,
-                             row=self.config.get_pos_attr('service_row'),
-                             col=self.config.get_pos_attr('service_col'),
-                             color=color,
-                             ttl=self.config.get_ttl_attr('service_ttl'),
-                             size="large")
+        self.__send_to_socket(text,
+                              row=oc.get_overlay_layout("service_row"),
+                              col=oc.get_overlay_layout("service_col"),
+                              color=color,
+                              ttl=oc.get_overlay_ttl("service_ttl"),
+                              size="large")
 
     def flush(self):
-        self.display(FLUSH, self.config.get_pos_attr('sub_header_row'), self.config.get_pos_attr('first_col'), self.config.get_color_attr('text'))
-        self.display(FLUSH, self.config.get_pos_attr('detail_row'), self.config.get_pos_attr('first_col'), self.config.get_color_attr('text'))
-        self.display(FLUSH, self.config.get_pos_attr('detail_row'), self.config.get_pos_attr('second_col'), self.config.get_color_attr('text'))
+        """
+        Try to flush the overlay with empty lines
+        :return:
+        """
+        self.display(FLUSH,
+                     oc.get_overlay_layout("sub_header_row"),
+                     oc.get_overlay_layout("first_col"),
+                     oc.get_overlay_color("text"))
+        self.display(FLUSH,
+                     oc.get_overlay_layout("detail_row"),
+                     oc.get_overlay_layout("first_col"),
+                     oc.get_overlay_color("text"))
+        self.display(FLUSH,
+                     oc.get_overlay_layout("detail_row"),
+                     oc.get_overlay_layout("second_col"),
+                     oc.get_overlay_color("text"))
 
     def display_notification(self, text):
         self.display(text,
-                     row=self.config.get_pos_attr('header_row'),
-                     col=self.config.get_pos_attr('first_col'),
-                     color=self.config.get_color_attr('notification'),
+                     row=oc.get_overlay_layout("header_row"),
+                     col=oc.get_overlay_layout("first_col"),
+                     color=oc.get_overlay_color("notification"),
                      size="large")
 
     def display_error(self, text):
         self.display(text,
-                     row=self.config.get_pos_attr('detail_row'),
-                     col=self.config.get_pos_attr('first_col'),
-                     color=self.config.get_color_attr('error'),
+                     row=oc.get_overlay_layout("detail_row"),
+                     col=oc.get_overlay_layout("first_col"),
+                     color=oc.get_overlay_color("error"),
                      size="large")
 
     def display_warning(self, text, col):
         self.display(text,
-                     row=self.config.get_pos_attr('detail_row'),
+                     row=oc.get_overlay_layout("detail_row"),
                      col=col,
-                     color=self.config.get_color_attr('warning'),
+                     color=oc.get_overlay_color("warning"),
                      size="large")
 
     def display_cmdr_name(self, text):
         self.display(text,
-                     row=self.config.get_pos_attr('header_row'),
-                     col=self.config.get_pos_attr('first_col'),
-                     color=self.config.get_color_attr('cmdr_name'),
+                     row=oc.get_overlay_layout("header_row"),
+                     col=oc.get_overlay_layout("first_col"),
+                     color=oc.get_overlay_color("cmdr_name"),
                      size="large")
 
-    def display_role(self, text):
+    def _display_role(self, text):
         self.display(text,
-                     row=self.config.get_pos_attr('sub_header_row'),
-                     col=self.config.get_pos_attr('first_col'),
-                     color=self.config.get_color_attr('cmdr_role'))
+                     row=oc.get_overlay_layout("sub_header_row"),
+                     col=oc.get_overlay_layout("first_col"),
+                     color=oc.get_overlay_color("cmdr_role"))
 
-    def display_section_title(self, title, col):
+    def _display_section_header(self, title, col):
         self.display(title,
-                     row=self.config.get_pos_attr('info_row'),
+                     row=oc.get_overlay_layout("info_row"),
                      col=col,
-                     color=self.config.get_color_attr('sect_title'),
+                     color=oc.get_overlay_color("sect_title"),
                      size="large")
 
-    def display_section(self, text, col):
+    def _display_section(self, text, col):
         self.display(text,
-                     row=self.config.get_pos_attr('detail_row'),
+                     row=oc.get_overlay_layout("detail_row"),
                      col=col,
-                     color=self.config.get_color_attr('text'))
+                     color=oc.get_overlay_color("text"))
 
-    def display_info(self, reply):
-        inara_data = inara.parse_reply(reply['inara'])
-        roa_data = roa.parse_reply(reply['roa'])
+    def display_info(self, pilot_name, cmdrData):
+        """
+        Display an entry
+        :param pilot_name:
+        :param cmdrData:
+        :return:
+        """
 
-        self.display_section_title("Inara", self.config.get_pos_attr('first_col'))
-        self.display_section_title("ROA DB", self.config.get_pos_attr('second_col'))
+        # Display cmdr name
+        self.display_cmdr_name(pilot_name)
+
+        # Display section headers
+        self._display_section_header("Inara", oc.get_overlay_layout("first_col"))
+        self._display_section_header("ROA DB", oc.get_overlay_layout("second_col"))
+
+        # Inara
+        inara_data = inara.parse_reply_for_overlay(cmdrData['inara'])
 
         if inara_data:
             if 'role' in inara_data:
-                self.display_role(inara_data['role'])
+                self._display_role(inara_data['role'])
 
-            text = '\n'.join(self._format_inara_data(inara_data))
+            lines = []
 
-            self.display_section(text, self.config.get_pos_attr('first_col'))
+            if 'wing' in inara_data:
+                for line in inara_data['wing']:
+                    lines.append(line)
+
+            for line in inara_data['base']:
+                lines.append(line)
+
+            for line in inara_data['rank']:
+                lines.append(line)
+
+            text = "\n".join(lines)
+
+            self._display_section(text, oc.get_overlay_layout("first_col"))
         else:
-            self.display_warning('No results', self.config.get_pos_attr('first_col'))
+            self.display_warning("No results", oc.get_overlay_layout("first_col"))
+
+        roa_data = roa.parse_reply_for_overlay(cmdrData['roa'])
 
         if roa_data:
-            formatted_data = self._format_roa_data(roa_data)
-
             # Remove 'Clan' if 'wing' is in already in inara
             # 'Clan' is always returned from roa.parse_reply
             # or this will not work
             if inara_data and 'wing' in inara_data:
-                text = '\n'.join(formatted_data[1:])
+                text = "\n".join(roa_data[1:])
             else:
-                text = '\n'.join(formatted_data)
+                text = "\n".join(roa_data)
 
-            self.display_section(text, self.config.get_pos_attr('second_col'))
+            self._display_section(text, oc.get_overlay_layout("second_col"))
         else:
-            self.display_warning('No results', self.config.get_pos_attr('second_col'))
+            self.display_warning("No results", oc.get_overlay_layout("second_col"))
 
-    def _format_inara_data(self, data):
-        lines = []
-
-        if 'wing' in data:
-            for i, (label, value) in enumerate(data['wing'].items()):
-                lines.append(self._line_template.format(label, value))
-
-        for key in data['base']:
-            lines.append(self._line_template.format(key, data['base'][key]))
-
-        for i, (label, value) in enumerate(data['rank'].items()):
-            lines.append(self._line_template.format(label, value))
-
-        return lines
-
-    def _format_roa_data(self, data):
-        lines = []
-
-        for label in roa_template:
-            if label in data:
-                if label == "Reason for KOS":
-                    lines.append('\n{}: \n{}'.format(label, textwrap.fill(data[label], 20)))
-                else:
-                    lines.append(self._line_template.format(label, data[label]))
-
-        return lines
+    def shutdown(self):
+        self._overlay.send_raw({
+            "command": "exit"
+        })

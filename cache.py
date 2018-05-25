@@ -9,44 +9,50 @@ import time
 
 _this_dir = os.path.abspath(os.path.dirname(__file__))
 
-CACHE_FILE = os.path.join(_this_dir, 'cache.db')
+CACHE_FILE = os.path.join(_this_dir, "cache.db")
 UPDATE_DELAY = 900
 
 
-def is_cache_file():
-    return os.path.isfile(CACHE_FILE)
-
-
-def _get_ts():
-    return int(time.time())
-
-
 class Cache:
-    _connection = None
-    _cursor = None
+    __connection = None
+    __cursor = None
 
     def __init__(self):
-        if is_cache_file():
+        if self.__is_cache_file():
             self.open()
         else:
             self.open()
-            self._init_tables()
+            self.__init_tables()
+
+    def __get_ts(self):
+        """
+        Return timestamp
+        :return:
+        """
+        return int(time.time())
+
+    def __is_cache_file(self):
+        """
+        Check if the file is a valid cache database
+        :return:
+        """
+        return os.path.isfile(CACHE_FILE)
 
     def open(self):
         """
         Open internal connection and cursor
         :return:
         """
-        self._connection = sqlite3.connect(CACHE_FILE)
-        self._cursor = self._connection.cursor()
+        self.__connection = sqlite3.connect(CACHE_FILE)
+        self.__cursor = self.__connection.cursor()
 
-    def _init_tables(self):
+    def __init_tables(self):
         """
         Init cache tables
         :return:
         """
-        self._connection.execute(
-            'CREATE TABLE cache (id INTEGER PRIMARY KEY AUTOINCREMENT, lastUpdate INTEGER, cmdrName TEXT, cmdrData TEXT)')
+        self.__connection.execute(
+            "CREATE TABLE cache (id INTEGER PRIMARY KEY AUTOINCREMENT, lastUpdate INTEGER, cmdrName TEXT, cmdrData TEXT)")
 
     def check(self, cmdr_name):
         """
@@ -54,38 +60,55 @@ class Cache:
         :param cmdr_name:
         :return:
         """
-        delay = _get_ts() - UPDATE_DELAY
+        delay = self.__get_ts() - UPDATE_DELAY
 
-        self._cursor.execute('SELECT cmdrData FROM cache WHERE cmdrName=? AND lastUpdate > ?',
-                             (cmdr_name, delay))
+        self.__cursor.execute("SELECT cmdrData FROM cache WHERE cmdrName=? AND lastUpdate > ?",
+                              (cmdr_name, delay))
 
-        result = self._cursor.fetchone()
+        result = self.__cursor.fetchone()
 
         return json.loads(result[0]) if result else result
 
-    def _insert_cache(self, cmdr_name, cmdr_data):
+    def get_scans(self, limit):
+        """
+        Get all the scanned commanders in cache
+        :return:
+        """
+        self.__cursor.execute("SELECT cmdrName, cmdrData FROM cache ORDER BY lastUpdate DESC LIMIT ?", (limit,))
+
+        results = self.__cursor.fetchall()
+
+        return {
+            'history': [t[0] for t in results],
+            'log': {
+                t[0]: json.loads(t[1])
+                for t in results
+            }
+        }
+
+    def __insert_cache(self, cmdr_name, cmdr_data):
         """
         DB insert
         :param cmdr_name:
         :param cmdr_data:
         :return:
         """
-        self._cursor.execute('INSERT INTO cache (lastUpdate, cmdrName, cmdrData) VALUES (?, ?, ?)',
-                             (_get_ts(), cmdr_name, json.dumps(cmdr_data),))
+        self.__cursor.execute("INSERT INTO cache (lastUpdate, cmdrName, cmdrData) VALUES (?, ?, ?)",
+                              (self.__get_ts(), cmdr_name, json.dumps(cmdr_data),))
 
-        self._connection.commit()
+        self.__connection.commit()
 
-    def _update_cache(self, cmdr_name, cmdr_data):
+    def __update_cache(self, cmdr_name, cmdr_data):
         """
         DB update
         :param cmdr_name:
         :param cmdr_data:
         :return:
         """
-        self._cursor.execute('UPDATE cache SET lastUpdate = ? , cmdrData = ? WHERE cmdrName = ?',
-                             (_get_ts(), json.dumps(cmdr_data), cmdr_name,))
+        self.__cursor.execute("UPDATE cache SET lastUpdate = ? , cmdrData = ? WHERE cmdrName = ?",
+                              (self.__get_ts(), json.dumps(cmdr_data), cmdr_name,))
 
-        self._connection.commit()
+        self.__connection.commit()
 
     def add_to_cache(self, cmdr_name, cmdr_data):
         """
@@ -94,20 +117,22 @@ class Cache:
         :param cmdr_data:
         :return:
         """
-        self._cursor.execute('SELECT cmdrName, lastUpdate FROM cache WHERE cmdrName = ?',
-                             (cmdr_name,))
+        self.__cursor.execute("SELECT cmdrName, lastUpdate FROM cache WHERE cmdrName = ?", (cmdr_name,))
 
-        result = self._cursor.fetchone()
+        result = self.__cursor.fetchone()
 
         if result:
-            self._update_cache(cmdr_name, cmdr_data)
+            self.__update_cache(cmdr_name, cmdr_data)
         else:
-            self._insert_cache(cmdr_name, cmdr_data)
+            self.__insert_cache(cmdr_name, cmdr_data)
 
     def close(self):
         """
         Close connection
         :return:
         """
-        self._cursor.close()
-        self._connection.close()
+        self.__cursor.close()
+        self.__connection.close()
+
+
+cacheDatabase = Cache()

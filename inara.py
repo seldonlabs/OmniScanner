@@ -1,17 +1,28 @@
 """
-Inara API calls
+Inara parsers
 """
 
-import json
+import omniutils as ou
 
-labels = {
+gui_ranks = [
+    'combat',
+    'trade',
+    'exploration'
+]
+
+gui_wing = [
+    'wingMemberRank',
+    'wingName'
+]
+
+base_labels = {
     'preferredAllegianceName': 'Allegiance',
-    'preferredPowerName': 'Power',
+    'preferredPowerName': 'Power'
 }
 
 wing_labels = {
     'wingName': 'Wing',
-    'wingMemberRank': 'Rank',
+    'wingMemberRank': 'Rank'
 }
 
 rank_values = {
@@ -96,45 +107,104 @@ rank_values = {
 }
 
 
-def parse_reply(data):
+def is_good_response(reply):
     """
-    Query the API
+    Check if the Inara response is solid
     :param reply:
     :return:
     """
-    events = data['events']
-    eventStatus = events[0]['eventStatus']
+    events = reply['events']
 
+    if events[0]['eventStatus'] != 204:
+        if 'otherNamesFound' in events[0]['eventData']:
+            ou.notify("Ugh multiple results on Inara...")
+            return False
+
+        return True
+
+    return False
+
+
+def parse_reply_for_gui(reply):
+    """
+    Parse Inara reply for the GUI
+    :param reply:
+    :return:
+    """
+    parsed_data = None
+
+    if is_good_response(reply):
+        eventData = reply['events'][0]['eventData']
+        parsed_data = []
+
+        # give role a custom key
+        if 'preferredGameRole' in eventData:
+            if eventData['preferredGameRole']:
+                parsed_data.append({
+                    'text': eventData['preferredGameRole'],
+                })
+
+        for rank in eventData['commanderRanksPilot']:
+            if rank['rankName'] in gui_ranks:
+                rank_name = rank['rankName']
+                rank_val = rank_values[rank_name][rank['rankValue']]
+                parsed_data.append({
+                    'text': rank_val,
+                    'tag': rank_name,
+                    'len': len(rank_val)
+                })
+
+        for label in base_labels:
+            if label in eventData:
+                if eventData[label]:
+                    parsed_data.append({
+                        'text': u"{}: {}".format(base_labels[label], eventData[label]),
+                    })
+
+        # Wing data is not always present
+        if 'commanderWing' in eventData:
+            wingData = eventData['commanderWing']
+            parsed_data.append({
+                'text': u" of ".join([wingData[label] for label in gui_wing]),
+            })
+
+    return parsed_data
+
+
+def parse_reply_for_overlay(reply):
+    """
+    Parse Inara reply for the Overlay
+    :param reply:
+    :return:
+    """
+    line_template = u"{}: {}"
     cmdrData = None
 
-    if eventStatus != 204:
-        eventData = events[0]['eventData']
+    if is_good_response(reply):
+        eventData = reply['events'][0]['eventData']
 
-        if 'otherNamesFound' in eventData:
-            print('ugh multiple results on Inara')
-        else:
-            cmdrData = {}
+        cmdrData = {}
 
-            # give role a custom key
-            if 'preferredGameRole' in eventData:
-                cmdrData['role'] = eventData['preferredGameRole']
+        # give role a custom key
+        if 'preferredGameRole' in eventData:
+            cmdrData['role'] = eventData['preferredGameRole']
 
-            cmdrData['base'] = {
-                labels[label]: eventData[label]
-                for label in labels if label in eventData
-            }
+        cmdrData['base'] = [
+            line_template.format(base_labels[label], eventData[label])
+            for label in base_labels if label in eventData
+        ]
 
-            cmdrData['rank'] = {
-                rank['rankName']: rank_values[rank['rankName']][rank['rankValue']]
-                for rank in eventData['commanderRanksPilot']
-            }
+        cmdrData['rank'] = [
+            line_template.format(rank['rankName'], rank_values[rank['rankName']][rank['rankValue']])
+            for rank in eventData['commanderRanksPilot']
+        ]
 
-            # Wing data is not always present
-            if 'commanderWing' in eventData:
-                wingData = eventData['commanderWing']
-                cmdrData['wing'] = {
-                    wing_labels[label]: wingData[label]
-                    for label in wing_labels
-                }
+        # Wing data is not always present
+        if 'commanderWing' in eventData:
+            wingData = eventData['commanderWing']
+            cmdrData['wing'] = [
+                line_template.format(wing_labels[label], wingData[label])
+                for label in wing_labels
+            ]
 
     return cmdrData
