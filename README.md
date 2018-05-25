@@ -11,22 +11,20 @@ OmniScanner works only when another player is scanned (obviously), after the sca
 
 #### Example response in EDMC
 
-<img style="float: left; padding-right: 10px" src="example_edmc.jpg"/>
+![example_overlay](example_edmc.jpg)
 
-##### =Inara=
-Red is for combat rank\
-Yellow is for trade rank\
-Blue is for exploration rank\
-Role in Inara database.\
-Etc.
+##### Inara
+- Red is for combat rank.
+- Yellow is for trade rank.
+- Blue is for exploration rank.
+- Role in Inara database.
+- Etc.
 
-##### =ROA=
-Clan name\
-Last update shows when the record was updated for the last time.\
-Combat Logger if the scanned commander is a know combat logger\
-Kill on Sight for people flagged by ROA.
-
-<div style="clear:both"></div>
+##### ROA
+- Clan name (could differ from Inara).
+- Last update shows when the record was updated for the last time.
+- Combat Logger if the scanned commander is a know combat logger.
+- Kill on Sight for people flagged by ROA.
 
 #### Example response using EDMCOverlay
 
@@ -49,7 +47,7 @@ Kill on Sight for people flagged by ROA.
 - Customizable date format with normal UTC and Elite UTC (330x years).
 - Automatic deactivation when deploying hardpoints.
 - Commander tracking for combat loggers (highly experimental, not public).
-- Customizable GUI and overlay through config file  (`omniscanner.ini`).
+- Customizable GUI and overlay through config file `omniscanner.ini`.
 - Scanner history with the latest 15 scans, you can configure the history length by changing the parameter `log_len` in `omniscanner.ini`.
 
 ## Customization
