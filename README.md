@@ -7,25 +7,40 @@ OmniScanner is a plugin for scanning commanders and get their background profile
 ## Usage
 OmniScanner works only when another player is scanned (obviously), after the scan is complete you will receive any info found on Inara or on ROA DB.
 
-**Only open mode is supported**, this plugin deactivate itself in **solo** for obvious reasons and **private groups are not supported** (at least for now).
+**Only open mode is supported**, this plugin is **deactivated solo mode** and **private group mode**.
 
-An example response:
+#### Example response in EDMC
 
-![example](example.png)
+<img style="float: left; padding-right: 10px" src="example_edmc.jpg"/>
+
+##### =Inara=
+Red is for combat rank\
+Yellow is for trade rank\
+Blue is for exploration rank\
+Role in Inara database.\
+Etc.
+
+##### =ROA=
+Clan name\
+Last update shows when the record was updated for the last time.\
+Combat Logger if the scanned commander is a know combat logger\
+Kill on Sight for people flagged by ROA.
+
+<div style="clear:both"></div>
+
+#### Example response using EDMCOverlay
+
+![example_overlay](example_overlay.png)
 
 ## Installation
 - Run the the installer for the latest version.
-- If you are installing OmniScanner for the first time you need to authorize `EDMCOverlay.exe` by running it from desktop at this location: `C:\Users\%USERPROFILE%\AppData\Local\EDMarketConnector\plugins\OmniScanner\EDMCOverlay\EDMCOverlay.exe`
+- If you want to use the overlay you have to install [EDMCOverlay][3] too and enable `Use Overlay` in OmniScanner settings.
 - Restart ED Market Connector and pray the [Great Attractor][2].
 
-### Note for EDMCOverlay
-[EDMCOverlay][3] is an unsigned program so you need to "trust" it before running it, you can change its trust policies either by running it or using the file properties dialog.
-
-## Compatibility
+## Overlay limitations
 - Supports only 64bit Elite:Dangerous (Horizons) on Windows only.
-- No Apple support (I don't like apples, and I don't have a Mac).
-- "Windowed" or "Borderless Fullscreen" mode only, Fullscreen not supported.
-- This plugin uses EDMCOverlay for displaying info on screen, so everything that applies to EDMCOverlay also applies here.
+- No Apple support.
+- "Windowed" or "Borderless Fullscreen" mode only, Fullscreen is not supported.
 
 ## Features
 - Full [Inara][0] profile with public data.
@@ -34,10 +49,15 @@ An example response:
 - Customizable date format with normal UTC and Elite UTC (330x years).
 - Automatic deactivation when deploying hardpoints.
 - Commander tracking for combat loggers (highly experimental, not public).
-- Customizable overlay through config file  (`overlay.ini`).
+- Customizable GUI and overlay through config file  (`omniscanner.ini`).
+- Scanner history with the latest 15 scans, you can configure the history length by changing the parameter `log_len` in `omniscanner.ini`.
 
-### Upcoming features
-- Commands for OmniScanner cache.
+## Customization
+- `log_len`: the length for the history log, you shouldn't use a value higher than 50 to avoid the GUI to start acting funny, default is 15.
+- `width`: The width of the output text area for the EDMC GUI, default is 30,
+- `height`: The height of the output text area for the EDMC GUI, default is 15.
+- `font`: Font type for the output text area.
+- `size`: Font size for the output text area.
 
 ## Commander Tracking
 As an **experimental feature**, if you scan a commander that is flagged by ROA DB as **Combat Logger** or is in ROA **KOS list**, the position of the scanned commander will be logged and saved until another commander will update that entry with another scan.
@@ -45,6 +65,7 @@ As an **experimental feature**, if you scan a commander that is flagged by ROA D
 Being an experimental feature these info will not be usable for now but only used for testing and see how it goes with a small/medium userbase.
 
 ## Versions
+- 0.4.0: Add EDMC Gui and multiple improvements.
 - 0.3.0: Add status message on EDMC panel.
 - 0.2.1: Update EDMCOverlay version.
 - 0.2.0: Customizable configuration for overlay.
