@@ -12,7 +12,7 @@ import omniutils as ou
 import omniconfig as oc
 from cache import cacheDatabase
 from gui import Gui
-from overlay import OverlayManager
+from omnioverlay import OverlayManager
 
 APP_LONGNAME = "OmniScanner"
 APP_VERSION = "0.4.0"
