@@ -80,7 +80,7 @@ def parse_reply_for_overlay(reply):
             lines.append(u'{}'.format(data['Clan']))
 
         if 'lastUPD' in data:
-            lines.append(line_template.format('Last update:', _format_epoch(data['lastUPD'])))
+            lines.append(line_template.format('Last update', _format_epoch(data['lastUPD'])))
 
         if 'isClogger' in data:
             lines.append(line_template.format('Combat logger', _format_bool(data['isClogger'])))
