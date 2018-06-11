@@ -70,6 +70,9 @@ Being an experimental feature these info will not be usable for now but only use
 - 0.1.1: Add startup message with version check.
 - 0.1.0: Initial testing version.
 
+## Contacts
+- Twitter: https://twitter.com/MarcusSeldon
+
 ## Thanks
 - To Cmdr Artie for [Inara][0].
 - To Cmdr Lou Baron for access to the [ROA DB][1].
