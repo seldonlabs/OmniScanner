@@ -10,8 +10,8 @@ from config import config
 
 import omniutils as ou
 import omniconfig as oc
-from cache import cacheDatabase
-from gui import Gui
+from omnicache import cacheDatabase
+from omnigui import Gui
 from omnioverlay import OverlayManager
 
 APP_LONGNAME = "OmniScanner"

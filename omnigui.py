@@ -10,9 +10,9 @@ from theme import theme
 
 import omniutils as ou
 from omniconfig import configuration
-from cache import cacheDatabase
-import inara
-import roa
+from omnicache import cacheDatabase
+import omniinara
+import omniroa
 
 
 class OmniContainer(tk.Frame):
@@ -192,7 +192,7 @@ class OmniOutput(tk.Text):
         theme_id = config.getint('theme')
 
         # Inara
-        inara_data = inara.parse_reply_for_gui(cmdrData['inara'])
+        inara_data = omniinara.parse_reply_for_gui(cmdrData['inara'])
 
         # header
         self.insert(tk.INSERT, "-=Inara=-\n", self.__get_themed_tag("inara_title", theme_id))
@@ -216,7 +216,7 @@ class OmniOutput(tk.Text):
             self.insert(tk.INSERT, "No results", "no_results")
 
         # Roa
-        roa_data = roa.parse_reply_for_gui(cmdrData['roa'])
+        roa_data = omniroa.parse_reply_for_gui(cmdrData['roa'])
 
         # header
         self.insert(tk.INSERT, "\n\n-=ROA=-\n", self.__get_themed_tag("roa_title", theme_id))

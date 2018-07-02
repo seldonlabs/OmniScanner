@@ -7,8 +7,8 @@ from config import config
 import omniconfig
 import omniutils as ou
 from omniconfig import configuration as oc
-import inara
-import roa
+import omniinara
+import omniroa
 
 FLUSH = " "
 
@@ -127,7 +127,7 @@ class OverlayManager:
         self._display_section_header("ROA DB", oc.get_overlay_layout("second_col"))
 
         # Inara
-        inara_data = inara.parse_reply_for_overlay(cmdrData['inara'])
+        inara_data = omniinara.parse_reply_for_overlay(cmdrData['inara'])
 
         if inara_data:
             if 'role' in inara_data:
@@ -151,7 +151,7 @@ class OverlayManager:
         else:
             self.display_warning("No results", oc.get_overlay_layout("first_col"))
 
-        roa_data = roa.parse_reply_for_overlay(cmdrData['roa'])
+        roa_data = omniroa.parse_reply_for_overlay(cmdrData['roa'])
 
         if roa_data:
             # Remove 'Clan' if 'wing' is in already in inara
