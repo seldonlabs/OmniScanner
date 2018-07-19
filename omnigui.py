@@ -234,7 +234,7 @@ class OmniOutput(tk.Text):
 
 
 class Gui:
-    def init_gui(self, parent):
+    def init_gui(self, parent, ver):
         """
         Init OmniScanner GUI
         :param parent:
@@ -247,7 +247,10 @@ class Gui:
         container = OmniContainer(parent)
 
         # label frame
-        main_frame = OmniLabelFrame(container)
+        main_frame = OmniFrame(container, name="omni_container")
+        label_frame = OmniFrame(main_frame, name="omni_label")
+        OmniLabel(label_frame, "title_label", "OmniScanner")
+        OmniLabel(label_frame, "ver_label", "v{}".format(ver))
 
         # status
         status_frame = OmniFrame(main_frame, name="omni_status")

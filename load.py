@@ -78,7 +78,7 @@ def plugin_app(parent):
     :param parent:
     :return:
     """
-    return _gui.init_gui(parent)
+    return _gui.init_gui(parent, APP_VERSION)
 
 
 def plugin_prefs(parent):
