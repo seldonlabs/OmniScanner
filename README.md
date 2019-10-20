@@ -1,5 +1,6 @@
-# OmniScanner
-An EDMC plugin for scanning commanders and getting their background info.
+# OmniScanner (DEPRECATED - NOT SUPPORTED ANYMORE)
+Omniscanner has been decomissioned.
+~~An EDMC plugin for scanning commanders and getting their background info.~~
 
 ## About
 OmniScanner is a plugin for scanning commanders and get their background profiles from [Inara][0] and from the [Ronin of Amarak (ROA) PVP Database][1].
