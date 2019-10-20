@@ -1,5 +1,6 @@
 # OmniScanner (DEPRECATED - NOT SUPPORTED ANYMORE)
-Omniscanner has been decomissioned.
+OmniScanner has been decommissioned.
+
 ~~An EDMC plugin for scanning commanders and getting their background info.~~
 
 ## About
@@ -76,10 +77,9 @@ Being an experimental feature these info will not be usable for now but only use
 
 ## Thanks
 - To Cmdr Artie for [Inara][0].
-- To Cmdr Lou Baron for access to the [ROA DB][1].
+- To Cmdr Lou Baron for access to ROA DB.
 - To Ian Norton for [EDMCOverlay][3].
 
 [0]:https://inara.cz
-[1]:http://roaweb20161109100616.azurewebsites.net/
 [2]:https://en.wikipedia.org/wiki/Great_Attractor
 [3]:https://github.com/inorton/EDMCOverlay
